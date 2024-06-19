@@ -1,0 +1,18 @@
+{
+    "name": "Grand Theft Auto V",
+    "price": 129.59,
+    "publisher": "Rockstar Games",
+    "mainPhoto": "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg?t=1706131787",
+    "photos": [
+        "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/ss_90f67258a3d991fe1b72030e56035ede688a82d7.1920x1080.jpg?t=1706131787",
+        "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/ss_ea78dfa1d7d81c3781287cab165f64ca70f1f2ea.1920x1080.jpg?t=1706131787",
+        "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/ss_be2b9e45c671f95b8bc9fde58dbbd1154b0b633a.1920x1080.jpg?t=1706131787"
+    ],
+    "genres": [
+        "Przygodowe",
+        "RPG"
+    ],
+    "description": "Grand Theft Auto V na PC pozwala graczom zobaczyć ogromny świat Los Santos i hrabstwa Blaine w rozdzielczości sięgającej 4K i lepszej oraz w 60 klatkach na sekundę.",
+    "releaseYear": 2015,
+    "location": "/sciezkadopliku/"
+}

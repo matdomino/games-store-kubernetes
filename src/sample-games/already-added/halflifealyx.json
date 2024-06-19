@@ -1,0 +1,18 @@
+{
+    "name": "Half-Life: Alyx",
+    "price": 274.99,
+    "publisher": "Valve",
+    "mainPhoto": "https://cdn.cloudflare.steamstatic.com/steam/apps/546560/header.jpg?t=1673391297",
+    "photos": [
+        "https://cdn.cloudflare.steamstatic.com/steam/apps/546560/ss_d61365e93f20ceb5a94a1e5b2811cf504cbfa303.1920x1080.jpg?t=1673391297",
+        "https://cdn.cloudflare.steamstatic.com/steam/apps/546560/ss_6868ae1644628f857e7df4b72a00fdf506f79c7f.1920x1080.jpg?t=1673391297",
+        "https://cdn.cloudflare.steamstatic.com/steam/apps/546560/ss_5d228b092e93ff148e6a998c33e751fb968cc956.1920x1080.jpg?t=1673391297"
+    ],
+    "genres": [
+        "Przygodowe",
+        "FPS"
+    ],
+    "description": "Half-Life: Alyx to powrót Valve do serii Half-Life dzięki technologii VR. To historia umiejscowiona między wydarzeniami z Half-Life a Half-Life 2 i opowiada ona o niemożliwej walce z okrutną rasą obcych znaną jako Kombinat. Grając jako Alyx Vance, jesteś jedyną szansą ludzkości na przetrwanie.",
+    "releaseYear": 2020,
+    "location": "/sciezkadopliku/"
+}

@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: theme('colors.gun-powder.50');
+  --secondary-color: theme('colors.gun-powder.950');
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: theme('colors.gun-powder.950');
+    --secondary-color: theme('colors.vivid-violet.50');
+  }
+}
+
+body {
+  color: var(--secondary-color);
+  background-color: var(--primary-color);
+  height: 100vh;
+}
