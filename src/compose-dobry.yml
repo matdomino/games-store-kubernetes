@@ -1,0 +1,49 @@
+version: '3.1'
+
+services:
+
+  mongo-db:
+    build:
+      context: ./mongo-db
+      dockerfile: Dockerfile
+    container_name: games-store-db
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: games-store-db
+    # Uncomment this if you want to access database from outside the Docker network
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-db/dbInit.mongodb.js:/docker-entrypoint-initdb.d/dbInit.mongodb.js
+    networks:
+      - containers-net 
+
+  # express-server:
+  #   build:
+  #     context: ./backend-express
+  #     dockerfile: Dockerfile
+  #   container_name: games-store-express
+  #   restart: always
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - mongo-db
+  #   networks:
+  #     - containers-net
+
+  # frontend:
+  #   build:
+  #     context: ./front-store-games
+  #     dockerfile: Dockerfile
+  #   container_name: games-store-front
+  #   restart: always
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - express-server
+  #   networks:
+  #     - containers-net
+
+networks:
+  containers-net:
+    driver: bridge
