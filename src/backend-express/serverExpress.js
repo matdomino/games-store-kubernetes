@@ -6,6 +6,8 @@ const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
+// require('dotenv').config();
+// const keycloak = require('keycloak-connect');
 const tokenKey = require('./tokenKey');
 const { login } = require('./rest-api/login');
 const { register } = require('./rest-api/register');
@@ -45,20 +47,36 @@ const { getHistory } = require('./rest-api/getHistory');
 const { getHistoryDetails } = require('./rest-api/getHistoryDetails');
 const { getSupportMsgs } = require('./rest-api/getSupportMsgs');
 const { getRefunds } = require('./rest-api/getRefunds');
+const KeycloakConnect = require('keycloak-connect');
 
 
 const app = express();
-const port = 3000;
+const port = 8000;
 app.use(cors({
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
   origin: 'http://localhost:8080'
 }));
 
+const keycloakConfig = {
+  clientId: `games-store-api`,
+  bearerOnly: true,
+  serverUrl: `http://localhost:8080`,
+  realm: `games-store`,
+  credentials: {
+    secret: `AEJV8XyKkoPzIiL31eGMbf6yecAIlryq`,
+  },
+};
+
+const keycloak = new KeycloakConnect({}, keycloakConfig);
+
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.use(keycloak.middleware());
 
-const dbUrl = 'mongodb://mongo-db:27017/';
+// ZMIENIC URL BAZY!!!!!!!!!!!!!!!!
+// const dbUrl = 'mongodb://mongo-db:27017/';
+const dbUrl = 'mongodb://localhost:27017/';
 const dbName = 'games-store-db';
 
 async function connect() {
@@ -77,8 +95,21 @@ async function connect() {
     const closedReturnsCollection = db.collection('closed-returns');
     const transactionsCollection = db.collection('transactions-history');
 
+    app.get('/auth-test',
+      [keycloak.protect()],
+      async (req, res) => {
+        try {
+          res.json({ status: "success" });
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    );
+
+    // KEYCLOAK - login - dziala juz
+
     app.post('/login', async (req, res) => {
-      await login(req, res, usersCollection, bcrypt, jwt, tokenKey);
+      await login(req, res, keycloak);
     });
 
     app.post('/register', async (req, res) => {

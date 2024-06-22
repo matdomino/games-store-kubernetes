@@ -1,27 +1,30 @@
-const login = async (req, res, usersCollection, bcrypt, jwt, tokenKey) => {
+const login = async (req, res, keycloak) => {
   try {
     const { user, pass } = req.body;
-    const existingUser = await usersCollection.findOne({ username: user });
 
-    if (existingUser && await bcrypt.compare(pass, existingUser.password)) {
-      const accessToken = jwt.sign({ user: existingUser.username, role: existingUser.role }, tokenKey, { expiresIn: '1h' });
-      res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        maxAge: 60 * 60 * 1000
+      keycloak.grantManager
+      .obtainDirectly(user, pass)
+      .then((grant) => {
+        res.json({
+          message: "User Login Successful",
+          status: true,
+          access_token: grant.access_token.token,
+          refresh_token: grant.refresh_token.token,
+          user_id: grant.access_token.content.sub,
+          role: grant.access_token.content?.realm_access?.roles,
+        });
+      })
+      .catch((err) => {
+        res.status(401).json({
+          message: "Authentication failed",
+          error: err,
+          status: false,
+          access_token: null,
+          refresh_token: null,
+          user_id: null,
+        });
       });
-      res.cookie('username', user, {
-        maxAge: 60 * 60 * 1000
-      });
-      res.cookie('roleType', existingUser.role, {
-        maxAge: 60 * 60 * 1000
-      });
-      res.cookie('walletBalance', existingUser.walletBalance, {
-        maxAge: 60 * 60 * 1000
-      });
-      res.json({ status: 'success', notifications: existingUser.notifications });
-    } else {
-      res.send({ status: 'failure' });
-    }
+
   } catch(err) {
     console.error(err);
     res.status(500).json({ error: "Wystąpił błąd serwera." });
