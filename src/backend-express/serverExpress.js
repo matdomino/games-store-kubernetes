@@ -1,15 +1,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken'); // chyba juz nie bedzie potrzebne
 const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const KeycloakConnect = require('keycloak-connect');
-const tokenKey = require('./tokenKey');
+const tokenKey = require('./tokenKey'); // chyba juz nie bedzie potrzebne
 const { login } = require('./rest-api/login');
-const { register } = require('./rest-api/register');
 const { logout } = require('./rest-api/logout');
 const { getUsers } = require('./rest-api/employee/getUsersList');
 const { getUser } = require('./rest-api/employee/getUser');
@@ -93,21 +92,27 @@ async function connect() {
     const closedReturnsCollection = db.collection('closed-returns');
     const transactionsCollection = db.collection('transactions-history');
 
-    app.get('/auth-test',
-      [keycloak.protect()],
-      async (req, res) => {
-        try {
-          const tokenData = req.tokenData;
-          const roles = tokenData.realm_access.roles;
+    app.get('/auth-test', async (req, res) => {
+      try {
+        const token = req.cookies['accessToken'];
 
-          console.log(roles);
-
-          res.json({ status: "success" });
-        } catch (err) {
-          console.error(err);
+        if (!token) {
+          return res.status(401).json({ error: 'No access token found' });
         }
+
+        keycloak.grantManager.validateAccessToken(token)
+          .then(() => {
+            res.json({ status: "success" });
+          })
+          .catch(err => {
+            console.error('Token validation error:', err);
+            res.status(401).json({ error: 'Invalid access token' });
+          });
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
       }
-    );
+    });
 
     app.post('/login', async (req, res) => {
       await login(req, res, usersCollection, keycloak);

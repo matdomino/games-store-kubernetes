@@ -37,11 +37,6 @@ const login = async (req, res, usersCollection, keycloak) => {
 
     res.cookie('accessToken', grant.access_token.token, {
       httpOnly: true,
-      maxAge: 5 * 60 * 1000,
-    });
-
-    res.cookie('refreshToken', grant.refresh_token.token, {
-      httpOnly: true,
       maxAge: 30 * 60 * 1000,
     });
 
@@ -61,7 +56,6 @@ const login = async (req, res, usersCollection, keycloak) => {
       message: "User Login Successful",
       status: true,
       access_token: grant.access_token.token,
-      refresh_token: grant.refresh_token.token,
       user_id: grant.access_token.content.sub,
       role: grant.access_token.content?.realm_access?.roles,
     });
@@ -73,12 +67,11 @@ const login = async (req, res, usersCollection, keycloak) => {
         error: err,
         status: false,
         access_token: null,
-        refresh_token: null,
         user_id: null,
       });
     } else {
       console.error(err);
-      res.status(500).json({ error: "Server error occurred." });
+      res.status(500).json({ error: "Wystąpił błąd serwera." });
     }
   }
 };

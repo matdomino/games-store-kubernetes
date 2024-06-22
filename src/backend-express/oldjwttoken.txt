@@ -1,0 +1,3 @@
+const tokenKey = "AEJV8XyKkoPzIiL31eGMbf6yecAIlryq";
+
+module.exports = tokenKey;
