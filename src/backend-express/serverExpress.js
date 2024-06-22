@@ -6,8 +6,7 @@ const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
-// require('dotenv').config();
-// const keycloak = require('keycloak-connect');
+const KeycloakConnect = require('keycloak-connect');
 const tokenKey = require('./tokenKey');
 const { login } = require('./rest-api/login');
 const { register } = require('./rest-api/register');
@@ -47,7 +46,6 @@ const { getHistory } = require('./rest-api/getHistory');
 const { getHistoryDetails } = require('./rest-api/getHistoryDetails');
 const { getSupportMsgs } = require('./rest-api/getSupportMsgs');
 const { getRefunds } = require('./rest-api/getRefunds');
-const KeycloakConnect = require('keycloak-connect');
 
 
 const app = express();
@@ -99,6 +97,11 @@ async function connect() {
       [keycloak.protect()],
       async (req, res) => {
         try {
+          const tokenData = req.tokenData;
+          const roles = tokenData.realm_access.roles;
+
+          console.log(roles);
+
           res.json({ status: "success" });
         } catch (err) {
           console.error(err);
@@ -106,14 +109,8 @@ async function connect() {
       }
     );
 
-    // KEYCLOAK - login - dziala juz
-
     app.post('/login', async (req, res) => {
-      await login(req, res, keycloak);
-    });
-
-    app.post('/register', async (req, res) => {
-      await register(req, res, usersCollection, bcrypt, jwt, tokenKey);
+      await login(req, res, usersCollection, keycloak);
     });
 
     app.delete('/logout', async (req, res) => {
