@@ -42,6 +42,22 @@ services:
   #   ports:
   #     - "8080:8080"
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.1
+    container_name: games-store-auth
+    restart: always
+    ports:
+      - 8080:8080
+    command: -v start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+
+  # chyba nie ma sensu dawac tutaj sieci jak i tam ma byc to dostepne dla api i frontu
+
+
 networks:
   containers-net:
     driver: bridge
