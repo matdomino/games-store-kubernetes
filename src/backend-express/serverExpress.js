@@ -1,6 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
 const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser');
@@ -28,11 +27,7 @@ const { clearNotifications } = require('./rest-api/clearNotifications');
 const { getNotifications } = require('./rest-api/getNotifications');
 const { getUserData } = require('./rest-api/getUserData');
 const { getWalletBalance } = require('./rest-api/getWalletBalance');
-const { changeUsername } = require('./rest-api/changeUsername');
-const { changePassword } = require('./rest-api/changePassword');
 const { changeAdress } = require('./rest-api/changeAdress');
-const { changeEmail } = require('./rest-api/changeEmail');
-const { deleteAccount } = require('./rest-api/deleteAccount');
 const { addBalance } = require('./rest-api/addBalance');
 const { finalizeOrder } = require('./rest-api/finalizeOrder');
 const { getOwnedGames } = require('./rest-api/getOwnedGames');
@@ -54,6 +49,7 @@ app.use(cors({
   origin: 'http://localhost:8080'
 }));
 
+// PRZENIESC CONFIG DO INNEGO PLIKU LUB DO ZMIENNYCH
 const keycloakConfig = {
   clientId: `games-store-api`,
   bearerOnly: true,
@@ -183,32 +179,8 @@ async function connect() {
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.put('/changeusername', keycloak.protect(), async (req, res) => {
-      changeUsername(req, res, usersCollection, bcrypt)
-        .then(result => res.json(result))
-        .catch(error => res.status(error.status).json({ error: error.error }));
-    });
-
-    app.put('/changepassword', keycloak.protect(), async (req, res) => {
-      changePassword(req, res, usersCollection, bcrypt)
-        .then(result => res.json(result))
-        .catch(error => res.status(error.status).json({ error: error.error }));
-    });
-
     app.put('/changeaddress', keycloak.protect(), async (req, res) => {
       changeAdress(req, res, usersCollection)
-        .then(result => res.json(result))
-        .catch(error => res.status(error.status).json({ error: error.error }));
-    });
-
-    app.put('/changeemail', keycloak.protect(), async (req, res) => {
-      changeEmail(req, res, usersCollection, bcrypt)
-        .then(result => res.json(result))
-        .catch(error => res.status(error.status).json({ error: error.error }));
-    });
-
-    app.delete('/deleteaccount', keycloak.protect(), async (req, res) => {
-      deleteAccount(req, res, usersCollection, bcrypt)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
