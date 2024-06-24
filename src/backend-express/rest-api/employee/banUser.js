@@ -5,19 +5,13 @@ const banUser = async (req, res, usersCollection, ObjectId) => {
     const isValidLogin = await verifyAuth(req, res);
 
     if (isValidLogin === true) {
-      const role = req.cookies.roleType;
 
-      if (role === "employee") {
-        const deletedUser = await usersCollection.deleteOne({ _id: new ObjectId(req.params.id) });
+      const deletedUser = await usersCollection.deleteOne({ _id: new ObjectId(req.params.id) });
 
-        if (deletedUser.deletedCount === 1) {
-          res.json({ status: 'success' });
-        } else {
-          res.status(404).json({ error: "Nie znaleziono użytkownika o podanym id" });
-        }
-
+      if (deletedUser.deletedCount === 1) {
+        res.json({ status: 'success' });
       } else {
-        res.status(401).json({ error: "Nie masz wymaganych uprawnień" });
+        res.status(404).json({ error: "Nie znaleziono użytkownika o podanym id" });
       }
     }
   } catch (err) {

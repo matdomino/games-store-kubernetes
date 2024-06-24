@@ -5,15 +5,9 @@ const getFullTransactionHistory = async (req, res, transactionsCollection) => {
     const isValidLogin = await verifyAuth(req, res);
 
     if (isValidLogin === true) {
-      const role = req.cookies.roleType;
+      const list = await transactionsCollection.find().toArray();
 
-      if (role === "employee") {
-        const list = await transactionsCollection.find().toArray();
-
-        res.json({ list: list });
-      } else {
-        res.status(401).json({ error: "Nie masz wymaganych uprawnień" });
-      }
+      res.json({ list: list });
     }
   } catch (err) {
     console.error(err);

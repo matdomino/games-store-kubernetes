@@ -5,15 +5,9 @@ const getRefundsList = async (req, res, pendingReturnsCollection) => {
     const isValidLogin = await verifyAuth(req, res);
 
     if (isValidLogin === true) {
-      const role = req.cookies.roleType;
+      const list = await pendingReturnsCollection.find().toArray();
 
-      if (role === "employee") {
-        const list = await pendingReturnsCollection.find().toArray();
-
-        res.json({ list: list });
-      } else {
-        res.status(401).json({ error: "Nie masz wymaganych uprawnień" });
-      }
+      res.json({ list: list });
     }
   } catch (err) {
     console.error(err);
