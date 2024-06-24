@@ -9,7 +9,6 @@ const setCookies = async (req, res, usersCollection) => {
     if (!existingUser) {
       const newUser = {
         username: user,
-        role: roles.includes('employee') ? 'employee' : 'user',
         walletBalance: 0,
         address: {
           firstName: null,
