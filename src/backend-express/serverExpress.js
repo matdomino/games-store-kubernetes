@@ -8,7 +8,7 @@ const multer = require('multer');
 const KeycloakConnect = require('keycloak-connect');
 const { setCookies } = require('./rest-api/setCookies');
 const { checkRole } = require('./rest-api/auth');
-const { logout } = require('./rest-api/logout');
+const { deleteCookies } = require('./rest-api/deleteCookies');
 const { getUsers } = require('./rest-api/employee/getUsersList');
 const { getUser } = require('./rest-api/employee/getUser');
 const { banUser } = require('./rest-api/employee/banUser');
@@ -91,8 +91,8 @@ async function connect() {
     const closedReturnsCollection = db.collection('closed-returns');
     const transactionsCollection = db.collection('transactions-history');
 
-    app.delete('/logout', async (req, res) => {
-      await logout(req, res);
+    app.delete('/deletecookies', async (req, res) => {
+      await deleteCookies(req, res);
     });
 
     app.post('/setcookies', keycloak.protect(), async (req, res) => {

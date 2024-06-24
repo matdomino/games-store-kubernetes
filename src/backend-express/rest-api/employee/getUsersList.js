@@ -5,18 +5,12 @@ const getUsers = async (req, res, usersCollection) => {
     const isValidLogin = await verifyAuth(req, res);
 
     if (isValidLogin === true) {
-      const role = req.cookies.roleType;
+      const users = await usersCollection.find(
+        {},
+        { projection: { _id: 1, username: 1, email: 1, role: 1 } }
+      ).toArray();
 
-      if (role === "employee") {
-        const users = await usersCollection.find(
-          {},
-          { projection: { _id: 1, username: 1, email: 1, role: 1 } }
-        ).toArray();
-
-        res.json({ status: 'success', users: users });
-      } else {
-        res.status(401).json({ error: "Nie masz wymaganych uprawnień" });
-      }
+      res.json({ status: 'success', users: users });
     }
   } catch (err) {
     console.error(err);

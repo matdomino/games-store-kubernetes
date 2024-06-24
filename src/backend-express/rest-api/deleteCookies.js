@@ -1,6 +1,6 @@
 const { clearAllCookies } = require('./auth');
 
-const logout = async (req, res) => {
+const deleteCookies = async (req, res) => {
   try {
     clearAllCookies(res);
 
@@ -11,4 +11,4 @@ const logout = async (req, res) => {
   }
 };
 
-module.exports = { logout };
+module.exports = { deleteCookies };
