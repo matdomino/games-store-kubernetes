@@ -25,7 +25,7 @@ export default function AdminPanel() {
     if (Object.keys(user).length === 0) {
       const isLoggedIn = setUserData(setUser);
       if (!isLoggedIn) {
-        router.push('/login');
+        router.push('/');
       }
     }
   }, []);

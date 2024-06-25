@@ -20,7 +20,7 @@ export default function Balance() {
         }
       } catch (error) {
         console.error(error);
-        router.push('/login');
+        router.push('/');
       }
     };
 

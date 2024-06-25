@@ -46,7 +46,7 @@ const port = 8000;
 app.use(cors({
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
-  origin: 'http://localhost:8080'
+  origin: 'http://localhost:3000'
 }));
 
 // PRZENIESC CONFIG DO INNEGO PLIKU LUB DO ZMIENNYCH

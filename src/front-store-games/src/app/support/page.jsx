@@ -48,7 +48,7 @@ export default function Support() {
         }
       } catch (error) {
         console.error(error);
-        router.push('/login');
+        router.push('/');
       }
     };
 

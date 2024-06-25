@@ -22,7 +22,7 @@ export default function Wallet() {
         }
       } catch (error) {
         console.error(error);
-        router.push('/login');
+        router.push('/');
       }
     };
 

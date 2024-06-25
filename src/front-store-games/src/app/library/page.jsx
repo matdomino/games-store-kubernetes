@@ -47,7 +47,7 @@ export default function Library() {
     if (Object.keys(user).length === 0) {
       const isLoggedIn = setUserData(setUser);
       if (!isLoggedIn) {
-        router.push('/login');
+        router.push('/');
       }
     }
     getLibrary();

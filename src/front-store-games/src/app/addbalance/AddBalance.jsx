@@ -41,7 +41,7 @@ export default function AddBalance () {
           await setUserData(setUser);
         } catch (error) {
           console.error(error);
-          router.push('/login');
+          router.push('/');
         }
 
         alert("Pomyślnie dodano środki na konto.");

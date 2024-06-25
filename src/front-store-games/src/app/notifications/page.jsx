@@ -24,7 +24,7 @@ export default function Notifications() {
         }
       } catch (error) {
         console.error(error);
-        router.push('/login');
+        router.push('/');
       }
     };
 

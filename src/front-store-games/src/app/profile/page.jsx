@@ -44,7 +44,7 @@ export default function Profile() {
     if (Object.keys(user).length === 0) {
       const isLoggedIn = setUserData(setUser);
       if (!isLoggedIn) {
-        router.push('/login');
+        router.push('/');
       }
     }
   }, []);

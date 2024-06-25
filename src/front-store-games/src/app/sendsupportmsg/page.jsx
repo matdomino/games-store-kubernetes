@@ -26,7 +26,7 @@ export default function SendSupportMsg () {
         }
       } catch (error) {
         console.error(error);
-        router.push('/login');
+        router.push('/');
       }
     };
 
