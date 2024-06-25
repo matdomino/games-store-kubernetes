@@ -21,7 +21,6 @@ export default function Store() {
 
   const getGames = async (body, access_token) => {
     try {
-      console.log(session);
       const res = await axios.post(
         GAMES_URL,
         body,

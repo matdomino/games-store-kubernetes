@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useContext } from "react";
+import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import UserContext from "../context/UserContext";
 import { setUserData } from "../setUserContext";
@@ -11,15 +12,24 @@ import './style.scss';
 const GET_SUPPORT_MSGS = '/getsupportmsgs';
 
 export default function Support() {
+  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const [ pending, setPending ] = useState([]);
   const [ closed, setClosed ] = useState([]);
   const router = useRouter();
 
   useEffect( () => {
-    const fetchData = async () => {
+    const fetchData = async (accessToken) => {
       try {
-        const msgs = await axios.get(GET_SUPPORT_MSGS, { withCredentials: true });
+        const msgs = await axios.get(
+          GET_SUPPORT_MSGS,
+          {
+            withCredentials: true,
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          });
+
         if (msgs.status === 200) {
           setClosed(msgs.data.closed);
           setPending(msgs.data.peding);
@@ -37,14 +47,19 @@ export default function Support() {
         }
       }
     };
-    fetchData();
-  }, []);
+
+    if (status === 'authenticated' && session.access_token) {
+      fetchData(session.access_token);
+    } else if (status !== "loading") {
+      router.push('/');
+    }
+  }, [status, session, user, setUser, router]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (Object.keys(user).length === 0) {
-          await setUserData(setUser);
+          await setUserData(setUser, session.access_token);
         }
       } catch (error) {
         console.error(error);
@@ -52,8 +67,12 @@ export default function Support() {
       }
     };
 
-    fetchData();
-  });
+    if (status === 'authenticated' && session.access_token) {
+      fetchData();
+    } else if (status !== "loading") {
+      router.push('/');
+    }
+  }, [status, session, user, setUser, router]);
 
   useEffect(() => {
   }, [pending, closed]);
