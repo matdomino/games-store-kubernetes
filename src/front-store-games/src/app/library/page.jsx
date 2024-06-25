@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useContext, useState, useRef } from "react";
+import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import UserContext from "../context/UserContext";
 import { setUserData } from "../setUserContext";
@@ -13,6 +14,7 @@ const GAMES_LIBRARY = '/getownedgames';
 const ADD_FAV = '/addtofavourites';
 
 export default function Library() {
+  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const router = useRouter();
   const [ games, setGames ] = useState([]);
@@ -22,9 +24,16 @@ export default function Library() {
   const [ type, setType ] = useState(null);
   const selectedRef = useRef(null);
 
-  const getLibrary = async () => {
+  const getLibrary = async (accessToken) => {
     try {
-      const res = await axios.get(GAMES_LIBRARY, { withCredentials: true });
+      const res = await axios.get(
+        GAMES_LIBRARY,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
 
       if (res.status === 200) {
         setGames(res.data.games);
@@ -44,14 +53,17 @@ export default function Library() {
   };
 
   useEffect(() => {
-    if (Object.keys(user).length === 0) {
-      const isLoggedIn = setUserData(setUser);
-      if (!isLoggedIn) {
-        router.push('/');
+    if (status === 'authenticated' && session.access_token) {
+      if (Object.keys(user).length === 0) {
+        const isLoggedIn = setUserData(setUser, session.access_token);
+        if (!isLoggedIn) {
+          router.push('/');
+        }
       }
+
+      getLibrary(session.access_token);
     }
-    getLibrary();
-  }, [refresh]);
+  }, [refresh, status, session, user, setUser, router]);
 
   const getGamesDetails = async (elemId) => {
     const GAME_URL = `/gamedetails/${elemId}`;
@@ -112,12 +124,19 @@ export default function Library() {
     );
   };
 
-  const addTofav = async () => {
+  const addTofav = async (accessToken) => {
     try {
       const data = {
         gameId: selectedRef.current
       };
-      const res = await axios.post(ADD_FAV, data, { withCredentials: true });
+      const res = await axios.post(ADD_FAV,
+        data,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
 
       if (res.status === 200) {
         if (type === "fav") {
@@ -150,7 +169,7 @@ export default function Library() {
       <div className="GameDetails">
         <img src={selectedDetails.mainPhoto} alt="" />
         <div className="navBar">
-          <button className="fav" onClick={addTofav}>{type === "normal" ? "Dodaj do ulubionych" : "Usuń z ulubionych"}</button>
+          <button className="fav" onClick={() => addTofav(session.access_token)}>{type === "normal" ? "Dodaj do ulubionych" : "Usuń z ulubionych"}</button>
         </div>
         <div className="options">
           <div className="review">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useContext } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from 'next-auth/react';
 import UserContext from "../../context/UserContext";
 import { setUserData } from "../../setUserContext";
 import NavBar from "../../NavBar";
@@ -13,13 +14,22 @@ export default function Game({ params }) {
   const GAME_URL = `/gamedetails/${params.gameid}`;
   const ADD_TO_CART_URL = `/addgametocart/${params.gameid}`;
 
+  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const router = useRouter();
   const [ game, setGame ] = useState(null);
 
-  const addToShoppingCart = async () => {
+  const addToShoppingCart = async (accessToken) => {
     try {
-      const res = await axios.put(ADD_TO_CART_URL, { withCredentials: true });
+      const res = await axios.put(
+        ADD_TO_CART_URL,
+        {},
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
 
       if (res.status === 200) {
         alert(res.data.status);
@@ -37,19 +47,30 @@ export default function Game({ params }) {
   };
 
   useEffect(() => {
-    if (Object.keys(user).length === 0) {
-      const isLoggedIn = setUserData(setUser);
-      if (!isLoggedIn) {
-        router.push('/');
+    if (status === 'authenticated' && session.access_token) {
+      if (Object.keys(user).length === 0) {
+        const isLoggedIn = setUserData(setUser, session.access_token);
+        if (!isLoggedIn) {
+          router.push('/');
+        }
       }
+    } else {
+      router.push('/');
     }
 
-  }, [user]);
+  }, [status, session, user, setUser, router]);
 
   useEffect(() => {
-    const dataFetch = async () => {
+    const dataFetch = async (accessToken) => {
       try {
-        const res = await axios.get(GAME_URL, { withCredentials: true });
+        const res = await axios.get(
+          GAME_URL,
+          {
+            withCredentials: true,
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          });
 
         if (res.data.status === "success") {
           setGame(res.data.game);
@@ -67,8 +88,11 @@ export default function Game({ params }) {
         }
       }
     };
-    dataFetch();
-  }, []);
+
+    if (status === 'authenticated' && session.access_token) {
+      dataFetch(session.access_token);
+    }
+  }, [status, session]);
 
   const NotFound = () => {
     return(
@@ -82,7 +106,7 @@ export default function Game({ params }) {
     <>
       {user.username && <NavBar user={user} />}
       <main>
-      { game === "NotFound" ? <NotFound /> : game ? <GameDetails game={game} addToShoppingCart={addToShoppingCart} /> : null }
+      { game === "NotFound" ? <NotFound /> : game ? <GameDetails game={game} addToShoppingCart={addToShoppingCart} accessToken={session.access_token} /> : null }
       </main>
     </>
   );

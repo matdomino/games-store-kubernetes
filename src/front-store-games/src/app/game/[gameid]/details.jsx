@@ -47,7 +47,7 @@ const ImageBox = ({ images }) => {
   );
 };
 
-export default function GameDetails ({ game, addToShoppingCart }) {
+export default function GameDetails ({ game, addToShoppingCart, accessToken }) {
   return(
     <div className='game'>
       <h2>{game.name}</h2>
@@ -55,7 +55,7 @@ export default function GameDetails ({ game, addToShoppingCart }) {
       <ImageBox images={game.photos} />
       <div className='price'>
         <span>Cena: {game.price} zł</span>
-        <button onClick={addToShoppingCart}>Dodaj do koszyka</button>
+        <button onClick={() => addToShoppingCart(accessToken)}>Dodaj do koszyka</button>
       </div>
       <div className='description'>{game.description}</div>
       <div className='releaseYear'>
