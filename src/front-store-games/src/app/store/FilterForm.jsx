@@ -9,7 +9,7 @@ const GET_GAMES = '/storegames';
 
 const inputStyle = "bg-gun-powder-950 shadow-custom border-1 rounded-custom pl-2";
 
-export default function FilterForm ({ setGames }) {
+export default function FilterForm ({ setGames, accessToken }) {
   const router = useRouter();
 
   const initialValues = {
@@ -51,9 +51,26 @@ export default function FilterForm ({ setGames }) {
       let res = null;
 
       if (values.searchPhrase) {
-        res = await axios.post(SEARCH_GAMES, searchData, { withCredentials: true });
+        res = await axios.post(
+          SEARCH_GAMES,
+          searchData,
+          {
+            withCredentials: true,
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          });
+
       } else {
-        res = await axios.post(GET_GAMES, filterData, { withCredentials: true });
+        res = await axios.post(
+          GET_GAMES,
+          filterData,
+          {
+            withCredentials: true,
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          });
       }
 
       if (res.data.status === "success") {

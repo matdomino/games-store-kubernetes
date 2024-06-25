@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useContext } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from 'next-auth/react';
 import UserContext from "../context/UserContext";
 import { setUserData } from "../setUserContext";
 import NavBar from "../NavBar";
@@ -13,13 +14,23 @@ import FilterForm from "./FilterForm";
 const GAMES_URL = '/storegames';
 
 export default function Store() {
+  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const [ games, setGames ] = useState([]);
   const router = useRouter();
 
-  const getGames = async (body) => {
+  const getGames = async (body, access_token) => {
     try {
-      const res = await axios.post(GAMES_URL, body, { withCredentials: true });
+      console.log(session);
+      const res = await axios.post(
+        GAMES_URL,
+        body,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${access_token}`
+          }
+        });
       if (res.data.status === "success") {
         setGames(res.data.games);
       } else {
@@ -39,19 +50,22 @@ export default function Store() {
   };
 
   useEffect(() => {
-    if (Object.keys(user).length === 0) {
-      const isLoggedIn = setUserData(setUser);
-      if (!isLoggedIn) {
-        router.push('/');
+    if (status === 'authenticated' && session.access_token) {
+      if (Object.keys(user).length === 0) {
+        const isLoggedIn = setUserData(setUser, session.access_token);
+        if (!isLoggedIn) {
+          router.push('/');
+        }
       }
-    }
-    const initialSearchBody = {
-      "sortBy": "name",
-      "sortOrder": "asc"
-    };
 
-    getGames(initialSearchBody);
-  }, []);
+      const initialSearchBody = {
+        sortBy: "name",
+        sortOrder: "asc"
+      };
+
+      getGames(initialSearchBody, session.access_token);
+    }
+  }, [status, session, user, setUser, router]);
 
   const redirectToGame = (gameId) => {
     router.push(`/game/${gameId}`);
@@ -85,7 +99,7 @@ export default function Store() {
       <main>
         <div className="gamesListClass">
           <div className="options">
-            { games.length > 0 ? <FilterForm className="FilterForm" setGames={setGames} /> : null }
+            { games.length > 0 ? <FilterForm className="FilterForm" setGames={setGames} accessToken={session.access_token} /> : null }
           </div>
           <div className="games">
             { games.length > 0 ? <GamesList games={games} /> : null }

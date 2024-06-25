@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSession, getSession, signIn } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import cookie from 'js-cookie';
 import axios from "@/api/axios";
 
@@ -46,7 +46,6 @@ export default function App() {
     }
 
     if (status === "authenticated") {
-      console.log(session.access_token);
 
       if (userName && walletBalance) {
         router.push('/store');
