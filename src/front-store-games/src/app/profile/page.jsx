@@ -113,7 +113,7 @@ export default function Profile() {
   const renderComponent = () => {
     switch (component) {
       case "AddressChange":
-        return <AddressChange backFun={toggleToUserInfoComponent} />;
+        return <AddressChange backFun={toggleToUserInfoComponent} accessToken={session.access_token} />;
       default:
         return <UserInfoComponent user={userInfo} />;
     }

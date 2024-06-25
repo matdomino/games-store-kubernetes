@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useContext, useState } from "react";
+import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import axios from "@/api/axios";
 import UserContext from "../context/UserContext";
@@ -12,6 +13,7 @@ import {FundsAdd, OrderFinalization, Return} from "./details";
 const HISTORY_URL = '/gettransactionshistory';
 
 export default function Notifications() {
+  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const [ history, setHistory ] = useState(null);
   const [ selectedId, setSelectedId ] = useState(null);
@@ -19,10 +21,10 @@ export default function Notifications() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async (accessToken) => {
       try {
         if (Object.keys(user).length === 0) {
-          await setUserData(setUser);
+          await setUserData(setUser, accessToken);
         }
       } catch (error) {
         console.error(error);
@@ -30,12 +32,23 @@ export default function Notifications() {
       }
     };
 
-    fetchData();
-  }, []);
+    if (status === 'authenticated' && session.access_token) {
+      fetchData(session.access_token);
+    } else if (status !== "loading") {
+      router.push('/');
+    }
+  }, [status, session, user, setUser, router]);
 
-  const getHistoryList = async () => {
+  const getHistoryList = async (accessToken) => {
     try {
-      const res = await axios.get(HISTORY_URL, { withCredentials: true });
+      const res = await axios.get(
+        HISTORY_URL,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
       if (res.status === 200) {
         setHistory(res.data.transactions);
       }
@@ -53,13 +66,25 @@ export default function Notifications() {
   };
 
   useEffect(() => {
-    getHistoryList();
-  }, []);
+    if (status === 'authenticated' && session.access_token) {
+      getHistoryList(session.access_token);
+    } else if (status !== "loading") {
+      router.push('/');
+    }
+  }, [status, session, user, setUser, router]);
 
-  const FetchTransactionDetails = async (elem) => {
+  const FetchTransactionDetails = async (elem, accessToken) => {
     const TRANSACTION_DETAILS_URL = `/gettransactiondetails/${elem}`;
     try {
-      const res = await axios.get(TRANSACTION_DETAILS_URL, { withCredentials: true });
+      const res = await axios.get(
+        TRANSACTION_DETAILS_URL,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+
       if (res.status === 200) {
         setSelectedId(elem);
         setSelectedDetails(res.data);
@@ -100,7 +125,7 @@ export default function Notifications() {
         <ul>
           {history.map((elem, index) => {
             return(
-              <li key={index} id={elem} onClick={() => FetchTransactionDetails(elem)}>
+              <li key={index} id={elem} onClick={() => FetchTransactionDetails(elem, session.access_token)}>
                 ID: {elem} {selectedId === elem ? "▴" : "▾"}
                 {selectedId === elem ? <TransactionDetails details={selectedDetails} /> : null}
               </li>

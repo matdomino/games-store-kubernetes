@@ -9,7 +9,7 @@ import { setUserData } from "../setUserContext";
 const ADDBALANCE_URL = '/addbalance';
 const inputStyle = "bg-gun-powder-950 shadow-custom border-1 rounded-custom pl-2";
 
-export default function AddBalance () {
+export default function AddBalance ({ accessToken }) {
   const { user, setUser } = useContext(UserContext);
   const [ isLoading, setIsLoading ] = useState(false);
   const router = useRouter();
@@ -35,10 +35,19 @@ export default function AddBalance () {
     };
 
     try {
-      const res = await axios.put(ADDBALANCE_URL, data, { withCredentials: true });
+      const res = await axios.put(
+        ADDBALANCE_URL,
+        data,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+
       if (res.data.status === "success") {
         try {
-          await setUserData(setUser);
+          await setUserData(setUser, accessToken);
         } catch (error) {
           console.error(error);
           router.push('/');
