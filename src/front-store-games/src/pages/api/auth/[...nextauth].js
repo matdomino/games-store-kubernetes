@@ -46,12 +46,13 @@ export default NextAuth({
   ],
 
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, profile }) {
       if (account) {
         return {
           access_token: account.access_token,
           expires_at: account.expires_at * 1000,
           refresh_token: account.refresh_token,
+          email: profile.email,
         };
       }
 
@@ -62,6 +63,7 @@ export default NextAuth({
       return refreshAccessToken(token);
     },
     async session({ session, token }) {
+      session.user.email = token.email;
       session.refresh_token = token.refresh_token;
       session.access_token = token.access_token;
       session.error = token.error;

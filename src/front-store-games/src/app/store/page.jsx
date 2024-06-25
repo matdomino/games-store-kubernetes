@@ -64,6 +64,8 @@ export default function Store() {
       };
 
       getGames(initialSearchBody, session.access_token);
+    } else if (status !== "loading") {
+      router.push('/');
     }
   }, [status, session, user, setUser, router]);
 

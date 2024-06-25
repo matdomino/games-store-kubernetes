@@ -62,6 +62,8 @@ export default function Library() {
       }
 
       getLibrary(session.access_token);
+    } else if (status !== "loading") {
+      router.push('/');
     }
   }, [refresh, status, session, user, setUser, router]);
 

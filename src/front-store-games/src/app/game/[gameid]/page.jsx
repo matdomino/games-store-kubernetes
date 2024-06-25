@@ -54,7 +54,7 @@ export default function Game({ params }) {
           router.push('/');
         }
       }
-    } else {
+    } else if (status !== "loading") {
       router.push('/');
     }
 
