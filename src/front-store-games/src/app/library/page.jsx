@@ -40,12 +40,11 @@ export default function Library() {
         setFavGames(res.data.favouriteGames);
       }
     } catch (err) {
-      if (err.response && err.response.data.error) {
-        if (err.response.status === 401) {
-          console.error(user);
+      if (err.response && err.response.data) {
+        if (err.response.status === 401 || err.response.status === 403) {
+          alert(err.response.data);
           router.push('/');
         }
-        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
@@ -84,15 +83,13 @@ export default function Library() {
         setSelectedDetails(res.data.game);
       }
     } catch (err) {
-      console.error(err);
-      if (err.message.includes('Network Error')) {
-        alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
-      } else if (err.response.status === 500) {
-        setType(null);
-      } else if (err.response.status === 404) {
-        setType(null);
+      if (err.response && err.response.data) {
+        if (err.response.status === 401 || err.response.status === 403) {
+          alert(err.response.data);
+          router.push('/');
+        }
       } else {
-        router.push('/');
+        alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
     }
   };
@@ -158,12 +155,11 @@ export default function Library() {
         setRefresh(!refresh);
       }
     } catch (err) {
-      if (err.response && err.response.data.error) {
-        if (err.response.status === 401) {
-          console.error(user);
+      if (err.response && err.response.data) {
+        if (err.response.status === 401 || err.response.status === 403) {
+          alert(err.response.data);
           router.push('/');
         }
-        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }

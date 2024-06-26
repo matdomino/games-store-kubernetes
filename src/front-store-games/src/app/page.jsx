@@ -2,11 +2,22 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSession, signIn } from 'next-auth/react';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import cookie from 'js-cookie';
 import axios from "@/api/axios";
 
 const COOKIES_URL = '/setcookies';
+
+const logout = async() => {
+  await signOut({ redirect: false, callbackUrl: '/' });
+};
+
+const removeAllCookies = () => {
+  const allCookies = cookie.get();
+  for (const cookieName in allCookies) {
+    cookie.remove(cookieName);
+  }
+};
 
 const fetchCookies = async (router, accessToken) => {
   try {
@@ -27,6 +38,9 @@ const fetchCookies = async (router, accessToken) => {
   } catch (err) {
     if (err.response && err.response.data.error) {
       alert(err.response.data.error);
+    } else if (err.response && err.response.status === 403) {
+      removeAllCookies();
+      logout();
     } else {
       alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
     }
@@ -50,11 +64,9 @@ export default function App() {
       if (userName && walletBalance) {
         router.push('/store');
       } else {
-        console.log("test2");
         fetchCookies(router, session.access_token);
       }
     } else {
-      console.log("test3");
       signIn('keycloak');
     }
   }, [status, userName, walletBalance, router]);

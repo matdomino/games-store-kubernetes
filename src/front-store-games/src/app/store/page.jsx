@@ -7,11 +7,19 @@ import UserContext from "../context/UserContext";
 import { setUserData } from "../setUserContext";
 import NavBar from "../NavBar";
 import axios from "@/api/axios";
+import cookie from 'js-cookie';
 import './style.scss';
 import FilterForm from "./FilterForm";
 
 
 const GAMES_URL = '/storegames';
+
+const removeAllCookies = () => {
+  const allCookies = cookie.get();
+  for (const cookieName in allCookies) {
+    cookie.remove(cookieName);
+  }
+};
 
 export default function Store() {
   const { data: session, status } = useSession();
@@ -37,11 +45,12 @@ export default function Store() {
         alert('Wystąpił błąd podczas przetwarzania żądania.');
       }
     } catch (err) {
-      if (err.response && err.response.data.error) {
-        if (err.response.status === 401) {
+      if (err.response && err.response.data) {
+        if (err.response.status === 401 || err.response.status === 403) {
+          alert(err.response.data);
+          removeAllCookies();
           router.push('/');
         }
-        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }

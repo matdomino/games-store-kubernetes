@@ -37,11 +37,11 @@ export default function Support() {
           alert('Wystąpił błąd podczas przetwarzania żądania.');
         }
       } catch (err) {
-        if (err.response && err.response.data.error) {
-          if (err.response.status === 401) {
+        if (err.response && err.response.data) {
+          if (err.response.status === 401 || err.response.status === 403) {
+            alert(err.response.data);
             router.push('/');
           }
-          alert(err.response.data.error);
         } else {
           alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
         }

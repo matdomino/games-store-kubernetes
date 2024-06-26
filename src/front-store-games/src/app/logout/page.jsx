@@ -30,8 +30,11 @@ export default function Logout() {
         alert('Wystąpił błąd podczas przetwarzania żądania.');
       }
     } catch (err) {
-      console.log(err);
-      alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
+      if (err.message && (err.message.includes('Network Error') || err.message.includes('ERR_CONNECTION_REFUSED'))) {
+        alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
+      } else {
+        console.log(err);
+      }
     }
   };
 
