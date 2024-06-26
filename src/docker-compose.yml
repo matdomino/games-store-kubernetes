@@ -22,12 +22,11 @@ services:
     container_name: games-store-express
     restart: always
     environment:
-      - EXPRESS_PORT=${EXPRESS_PORT}
       - FRONTEND_PORT=${FRONTEND_PORT}
       - DB_URL=mongodb://mongo-db:27017/games-store-db
       - SECRET_TOKEN=28c2182c2bc4ddbe90bf45c805a5b5938add271e50e283acc372ffcff2dfaa4f
     ports:
-      - "${EXPRESS_PORT}:${EXPRESS_PORT}"
+      - "8000:8000"
     depends_on:
       - mongo-db
     networks:
@@ -40,10 +39,9 @@ services:
     container_name: games-store-front
     restart: always
     environment:
-      - EXPRESS_PORT=${EXPRESS_PORT}
       - FRONTEND_PORT=${FRONTEND_PORT}
     ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+      - "${FRONTEND_PORT}:3000"
     depends_on:
       - express-server
     networks:

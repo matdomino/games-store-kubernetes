@@ -47,11 +47,11 @@ const { getRefunds } = require('./rest-api/getRefunds');
 
 
 const app = express();
-const port = process.env.EXPRESS_PORT;
+const port = 8000;
 app.use(cors({
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
-  origin: process.env.FRONTEND_PORT
+  origin: `http://localhost:${process.env.FRONTEND_PORT}`
 }));
 
 app.use(bodyParser.json());
