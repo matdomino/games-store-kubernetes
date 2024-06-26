@@ -10,9 +10,6 @@ services:
     restart: always
     environment:
       MONGO_INITDB_DATABASE: games-store-db
-    # Uncomment this if you want to access database from outside the Docker network
-    # ports:
-    #   - "27017:27017"
     volumes:
       - ./mongo-db/dbInit.mongodb.js:/docker-entrypoint-initdb.d/dbInit.mongodb.js
     networks:
@@ -24,8 +21,13 @@ services:
       dockerfile: Dockerfile
     container_name: games-store-express
     restart: always
+    environment:
+      - EXPRESS_PORT=${EXPRESS_PORT}
+      - FRONTEND_PORT=${FRONTEND_PORT}
+      - DB_URL=mongodb://mongo-db:27017/games-store-db
+      - SECRET_TOKEN=28c2182c2bc4ddbe90bf45c805a5b5938add271e50e283acc372ffcff2dfaa4f
     ports:
-      - "8000:8000"
+      - "${EXPRESS_PORT}:${EXPRESS_PORT}"
     depends_on:
       - mongo-db
     networks:
@@ -37,8 +39,11 @@ services:
       dockerfile: Dockerfile
     container_name: games-store-front
     restart: always
+    environment:
+      - EXPRESS_PORT=${EXPRESS_PORT}
+      - FRONTEND_PORT=${FRONTEND_PORT}
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
     depends_on:
       - express-server
     networks:

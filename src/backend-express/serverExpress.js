@@ -6,7 +6,6 @@ const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
-const tokenKey = require('./tokenKey');
 const { login } = require('./rest-api/login');
 const { register } = require('./rest-api/register');
 const { logout } = require('./rest-api/logout');
@@ -48,17 +47,17 @@ const { getRefunds } = require('./rest-api/getRefunds');
 
 
 const app = express();
-const port = 3000;
+const port = process.env.EXPRESS_PORT;
 app.use(cors({
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
-  origin: 'http://localhost:8080'
+  origin: process.env.FRONTEND_PORT
 }));
 
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-const dbUrl = 'mongodb://mongo-db:27017/';
+const dbUrl = process.env.DB_URL;
 const dbName = 'games-store-db';
 
 async function connect() {
@@ -78,11 +77,11 @@ async function connect() {
     const transactionsCollection = db.collection('transactions-history');
 
     app.post('/login', async (req, res) => {
-      await login(req, res, usersCollection, bcrypt, jwt, tokenKey);
+      await login(req, res, usersCollection, bcrypt, jwt, process.env.SECRET_TOKEN);
     });
 
     app.post('/register', async (req, res) => {
-      await register(req, res, usersCollection, bcrypt, jwt, tokenKey);
+      await register(req, res, usersCollection, bcrypt, jwt, process.env.SECRET_TOKEN);
     });
 
     app.delete('/logout', async (req, res) => {
