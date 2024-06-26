@@ -2,7 +2,6 @@ const setCookies = async (req, res, usersCollection) => {
   try {
     const grant = req.kauth.grant;
     const user = grant.access_token.content.preferred_username;
-    const roles = grant.access_token.content.realm_access.roles;
 
     let existingUser = await usersCollection.findOne({ username: user });
 

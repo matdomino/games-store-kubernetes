@@ -59,6 +59,10 @@ export default function AddBalance ({ accessToken }) {
       }
     } catch (err) {
       if (err.response && err.response.data) {
+        if (err.response.status === 400 && err.response.data.error === "Brak informacji rozliczeniowych.") {
+          alert("Brak informacji rozliczeniowych, uzupełnij adres.");
+          router.push('/profile');
+        }
         if (err.response.status === 401 || err.response.status === 403) {
           alert(err.response.data);
           router.push('/');

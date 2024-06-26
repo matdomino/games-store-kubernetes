@@ -29,7 +29,6 @@ export default function ReviewGame ({ elemId, accessToken }) {
     };
 
     try {
-      console.log(accessToken);
       const res = await axios.post(
         REVIEW_URL,
         data,

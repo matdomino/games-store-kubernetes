@@ -13,7 +13,6 @@ const KEYCLOAK_LOGOUT_URL = 'http://localhost:8080/realms/games-store/protocol/o
 export default function Logout() {
   const { data: session } = useSession();
   const { setUser } = useContext(UserContext);
-  const router = useRouter();
 
   const logout = async () => {
     try {
