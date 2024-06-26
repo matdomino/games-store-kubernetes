@@ -7,7 +7,7 @@ const RETURN_URL = '/returngame';
 
 const inputStyle = "bg-gun-powder-950 border-1 rounded-custom pl-2";
 
-export default function ReturnGameModule ({ elemId, gameName }) {
+export default function ReturnGameModule ({ elemId, gameName, accessToken }) {
   const router = useRouter();
 
   const initialValues = {
@@ -26,7 +26,14 @@ export default function ReturnGameModule ({ elemId, gameName }) {
     };
 
     try {
-      const res = await axios.post(RETURN_URL, data, { withCredentials: true });
+      const res = await axios.post(RETURN_URL,
+        data,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
 
       if (res.data.status === "success") {
         alert("Wysłano żadanie zwrotu.");

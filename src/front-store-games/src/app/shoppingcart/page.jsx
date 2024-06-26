@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useContext, useState } from "react";
+import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import UserContext from "../context/UserContext";
 import { setUserData } from "../setUserContext";
@@ -12,14 +13,22 @@ const CHECKOUT_URL = '/checkout';
 const FINALIZE_URL = '/finalizeorder';
 
 export default function ShoppingCart() {
+  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const [ reload, setReload ] = useState(false);
   const [ checkoutData, setCheckoutData ] = useState(null);
   const router = useRouter();
 
-  const getChekout = async () => {
+  const getChekout = async (accessToken) => {
     try {
-      const res = await axios.get(CHECKOUT_URL, { withCredentials: true });
+      const res = await axios.get(
+        CHECKOUT_URL,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
 
       if (res.status === 200) {
         setCheckoutData(res.data);
@@ -37,23 +46,35 @@ export default function ShoppingCart() {
   };
 
   useEffect(() => {
-    if (Object.keys(user).length === 0) {
-      const isLoggedIn = setUserData(setUser);
-      if (!isLoggedIn) {
-        router.push('/');
+    if (status === 'authenticated' && session.access_token) {
+      if (Object.keys(user).length === 0) {
+        const isLoggedIn = setUserData(setUser, session.access_token);
+        if (!isLoggedIn) {
+          router.push('/');
+        }
       }
+
+      getChekout(session.access_token);
+    } else if (status !== "loading") {
+      router.push('/');
     }
+  }, [status, session, user, setUser, router, reload]);
 
-    getChekout();
-  }, [user]);
-
-  const finalizeOrder = async () => {
+  const finalizeOrder = async (accessToken) => {
     try {
-      const res = await axios.post(FINALIZE_URL, { withCredentials: true });
+      const res = await axios.post(
+        FINALIZE_URL,
+        {},
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
 
       if (res.status === 200) {
         alert('Twoje zamówienie zostało zrealizowane!');
-        await setUserData(setUser);
+        await setUserData(setUser, accessToken);
       }
     } catch (err) {
       if (err.response && err.response.data.error) {
@@ -67,10 +88,17 @@ export default function ShoppingCart() {
     }
   };
 
-  const deleteFromCart = async (gameId) => {
+  const deleteFromCart = async (gameId, accessToken) => {
     try {
       const DELETE_URL = `/deletefromcart/${gameId}`;
-      const res = await axios.delete(DELETE_URL, { withCredentials: true });
+      const res = await axios.delete(
+        DELETE_URL,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
 
       if (res.status === 200) {
         alert("Usunięto pozycje z koszyka");
@@ -88,7 +116,7 @@ export default function ShoppingCart() {
     }
   };
 
-  const Cart = ({checkoutData}) => {
+  const Cart = ({checkoutData, accessToken}) => {
     return(
       <div className="cart-box">
         <h1>Koszyk:</h1>
@@ -105,7 +133,7 @@ export default function ShoppingCart() {
                         </div>
                         <div className="options">
                           <span>{elem.price} zł</span>
-                          <button onClick={() => deleteFromCart(elem._id)}>Usuń</button>
+                          <button onClick={() => deleteFromCart(elem._id, accessToken)}>Usuń</button>
                         </div>
                       </div>
                     </li>
@@ -127,7 +155,7 @@ export default function ShoppingCart() {
                 </ul>
               </div>
               <div className="button-box">
-                <button onClick={() => finalizeOrder()}>Kup gry</button>
+                <button onClick={() => finalizeOrder(accessToken)}>Kup gry</button>
               </div>
             </div>
         </div>
@@ -139,7 +167,7 @@ export default function ShoppingCart() {
     <>
       {user.username && <NavBar user={user} />}
       <main>
-        { checkoutData ? <Cart checkoutData={checkoutData} /> : null }
+        { checkoutData ? <Cart checkoutData={checkoutData} accessToken={session.access_token} /> : null }
       </main>
     </>
 

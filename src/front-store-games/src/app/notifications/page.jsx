@@ -105,7 +105,7 @@ export default function Notifications() {
       <div className="notif">
         <div className="buttonBar">
           <h2>Powiadomienia: </h2>
-          <button className="clearNotifications" onClick={() => clearNotifications(session.accessToken)}>Wyczyść</button>
+          <button className="clearNotifications" onClick={() => clearNotifications(session.access_token)}>Wyczyść</button>
         </div>
         <div className="notifList">
           <ul>

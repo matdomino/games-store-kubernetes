@@ -7,7 +7,7 @@ const REVIEW_URL = '/reviewgame';
 
 const inputStyle = "bg-gun-powder-950 shadow-custom border-1 rounded-custom pl-2";
 
-export default function ReviewGame ({ elemId }) {
+export default function ReviewGame ({ elemId, accessToken }) {
   const router = useRouter();
 
   const initialValues = {
@@ -29,7 +29,16 @@ export default function ReviewGame ({ elemId }) {
     };
 
     try {
-      const res = await axios.post(REVIEW_URL, data, { withCredentials: true });
+      console.log(accessToken);
+      const res = await axios.post(
+        REVIEW_URL,
+        data,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
 
       if (res.data.status === "success") {
         alert("Zrecenzowano grę");

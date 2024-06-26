@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth';
 import KeycloakProvider from 'next-auth/providers/keycloak';
-
+import jwt from 'jsonwebtoken';
 import axios from 'axios';
 
 async function refreshAccessToken(token) {
@@ -24,7 +24,7 @@ async function refreshAccessToken(token) {
       ...token,
       access_token: refreshedTokens.access_token,
       expires_at: Date.now() + 300 * 1000,
-      refresh_token: refreshedTokens.refresh_token ?? token.refresh_token, // Fall back to old refresh token
+      refresh_token: refreshedTokens.refresh_token ?? token.refresh_token,
     };
   } catch (error) {
     console.error('Error refreshing access token', error);
@@ -48,11 +48,18 @@ export default NextAuth({
   callbacks: {
     async jwt({ token, account, profile }) {
       if (account) {
+        let roles = [];
+        const decodedToken = jwt.decode(account?.access_token);
+
+        if (decodedToken && typeof decodedToken !== 'string') {
+          roles = decodedToken?.realm_access;
+        }
         return {
           access_token: account.access_token,
           expires_at: account.expires_at * 1000,
           refresh_token: account.refresh_token,
           email: profile.email,
+          roles: roles.roles
         };
       }
 
@@ -64,6 +71,7 @@ export default NextAuth({
     },
     async session({ session, token }) {
       session.user.email = token.email;
+      session.roles = token.roles;
       session.refresh_token = token.refresh_token;
       session.access_token = token.access_token;
       session.error = token.error;

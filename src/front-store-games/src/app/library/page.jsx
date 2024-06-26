@@ -67,11 +67,19 @@ export default function Library() {
     }
   }, [refresh, status, session, user, setUser, router]);
 
-  const getGamesDetails = async (elemId) => {
+  const getGamesDetails = async (elemId, accessToken) => {
     const GAME_URL = `/gamedetails/${elemId}`;
 
     try {
-      const res = await axios.get(GAME_URL, { withCredentials: true });
+      const res = await axios.get(
+        GAME_URL,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+
+        });
       if (res.data.status === "success") {
         setSelectedDetails(res.data.game);
       }
@@ -89,25 +97,25 @@ export default function Library() {
     }
   };
 
-  const handleClickFavourite = async (elemId) => {
+  const handleClickFavourite = async (elemId, accessToken) => {
     selectedRef.current = elemId;
-    await getGamesDetails(elemId);
+    await getGamesDetails(elemId, accessToken);
     setType("fav");
   };
 
-  const handleClick = async (elemId) => {
+  const handleClick = async (elemId, accessToken) => {
     selectedRef.current = elemId;
-    await getGamesDetails(elemId);
+    await getGamesDetails(elemId, accessToken);
     setType("normal");
   };
 
-  const GamesList = ({ games, favGames }) => {
+  const GamesList = ({ games, favGames, accessToken }) => {
     return(
       <div className="gamesList">
         <h3>Ulubione:</h3>
         <ul className="favourite">
           {favGames.map((elem, index) => (
-            <li key={index} onClick={() => handleClickFavourite(elem.id)}>
+            <li key={index} onClick={() => handleClickFavourite(elem.id, accessToken)}>
               {elem.name}
             </li>
           ))}
@@ -116,7 +124,7 @@ export default function Library() {
         <ul className="games">
           {games.map((elem, index) => (
             !favGames.some(favGame => favGame.id === elem.id) && (
-              <li key={index} onClick={() => handleClick(elem.id)}>
+              <li key={index} onClick={() => handleClick(elem.id, accessToken)}>
                 {elem.name}
               </li>
             )
@@ -166,7 +174,7 @@ export default function Library() {
     router.push(`/returngame/${selectedRef.current}`);
   };
 
-  const GamesOptions = ({type}) => {
+  const GamesOptions = ({type, accessToken}) => {
     return(
       <div className="GameDetails">
         <img src={selectedDetails.mainPhoto} alt="" />
@@ -175,7 +183,7 @@ export default function Library() {
         </div>
         <div className="options">
           <div className="review">
-            <ReviewGame elemId={selectedRef.current} />
+            <ReviewGame elemId={selectedRef.current} accessToken={accessToken} />
           </div>
         </div>
         <div className="returnUrl">
@@ -193,14 +201,18 @@ export default function Library() {
     );
   };
 
+  if (status === 'loading') {
+    return;
+  }
+
   return (
     <div>
       {user.username && <NavBar user={user} />}
       <main>
         <div className="gamesMenu">
-          <GamesList games={games} favGames={favGames} />
+          <GamesList games={games} favGames={favGames} accessToken={session.access_token} />
           <div className="optionDiv">
-            {type ? <GamesOptions gameId={selectedRef.current} type={type}/> : <ShowNonePrompt />}
+            {type ? <GamesOptions gameId={selectedRef.current} type={type} accessToken={session.access_token}/> : <ShowNonePrompt />}
           </div>
         </div>
       </main>
