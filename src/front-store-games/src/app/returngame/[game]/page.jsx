@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useContext, useState } from "react";
-import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import UserContext from "../../context/UserContext";
 import { setUserData } from "../../setUserContext";
@@ -11,7 +10,6 @@ import './style.scss';
 import axios from "@/api/axios";
 
 export default function ReturnGame({ params }) {
-  const { data: session, status } = useSession();
   const GAME_URL = `/gamedetails/${params.game}`;
 
   const { user, setUser } = useContext(UserContext);
@@ -22,32 +20,21 @@ export default function ReturnGame({ params }) {
     const fetchData = async () => {
       try {
         if (Object.keys(user).length === 0) {
-          await setUserData(setUser, session.access_token);
+          await setUserData(setUser);
         }
       } catch (error) {
         console.error(error);
-        router.push('/');
+        router.push('/login');
       }
     };
 
-    if (status === 'authenticated' && session.access_token) {
-      fetchData();
-    } else if (status !== "loading") {
-      router.push('/');
-    }
-  }, [status, session, user, setUser, router]);
+    fetchData();
+  }, []);
 
   useEffect(() => {
-    const dataFetch = async (accessToken) => {
+    const dataFetch = async () => {
       try {
-        const res = await axios.get(
-          GAME_URL,
-          {
-            withCredentials: true,
-            headers: {
-              Authorization: `Bearer ${accessToken}`
-            }
-          });
+        const res = await axios.get(GAME_URL, { withCredentials: true });
 
         if (res.data.status === "success") {
           setGame(res.data.game);
@@ -65,14 +52,8 @@ export default function ReturnGame({ params }) {
         }
       }
     };
-
-    if (status === 'authenticated' && session.access_token) {
-      dataFetch(session.access_token);
-    } else if (status !== "loading") {
-      router.push('/');
-    }
-
-  }, [status, session, user, setUser, router]);
+    dataFetch();
+  }, []);
 
   const NotFound = () => {
     return(
@@ -86,17 +67,13 @@ export default function ReturnGame({ params }) {
     router.push('/library');
   };
 
-  if (status === 'loading') {
-    return;
-  }
-
   return (
     <main>
       {user.username && <NavBar user={user} />}
       <div className="return">
         <button className="backButton" onClick={goBack}>←</button>
         <div className="returnForm">
-          { game === null ? null : game === "NotFound" ? <NotFound /> : <ReturnGameModule elemId={params.game} gameName={game.name} accessToken={session.access_token}/>}
+          { game === null ? null : game === "NotFound" ? <NotFound /> : <ReturnGameModule elemId={params.game} gameName={game.name}/>}
         </div>
       </div>
     </main>

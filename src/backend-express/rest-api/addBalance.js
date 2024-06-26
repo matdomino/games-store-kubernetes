@@ -31,17 +31,6 @@ const addBalance = async (req, res, usersCollection, transactionsCollection) => 
           }
 
           const userProfile = await usersCollection.findOne({ "username": username });
-
-          if (userProfile.address.firstName === null ||
-            userProfile.address.lastName === null ||
-            userProfile.address.city === null ||
-            userProfile.address.home === null ||
-            userProfile.address.postCode === null) {
-
-            reject({ status: 400, error: "Brak informacji rozliczeniowych." });
-            return;
-          }
-
           const newWalletBalance = parseFloat((userProfile.walletBalance + balanceOption).toFixed(2));
 
           const transaction = {

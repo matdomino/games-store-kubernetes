@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useContext, useState } from "react";
-import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import axios from "@/api/axios";
 import UserContext from "../context/UserContext";
@@ -13,7 +12,6 @@ const NOTIF_URL = '/notifications';
 const CLEARNOTIF_URL = '/clearnotifications';
 
 export default function Notifications() {
-  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const [ notif, setNotif ] = useState(null);
   const router = useRouter();
@@ -22,66 +20,49 @@ export default function Notifications() {
     const fetchData = async () => {
       try {
         if (Object.keys(user).length === 0) {
-          await setUserData(setUser, session.access_token);
+          await setUserData(setUser);
         }
       } catch (error) {
         console.error(error);
-        router.push('/');
+        router.push('/login');
       }
     };
 
-    if (status === 'authenticated' && session.access_token) {
-      fetchData();
-    } else if (status !== "loading") {
-      router.push('/');
-    }
-  }, [status, session, user, setUser, router]);
+    fetchData();
+  }, []);
 
-  const fetchNotifications = async (accessToken) => {
+  const fetchNotifications = async () => {
     try {
-      const res = await axios.get(
-        NOTIF_URL,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
-
+      const res = await axios.get(NOTIF_URL, { withCredentials: true });
       if (res.data.status === "success") {
         setNotif(res.data.notifications);
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      console.error(err);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
     }
   };
 
-  const clearNotifications = async (accessToken) => {
+  const clearNotifications = async () => {
     try {
-      const res = await axios.delete(
-      CLEARNOTIF_URL,
-      {
-        withCredentials: true,
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
+      const res = await axios.delete(CLEARNOTIF_URL, { withCredentials: true });
       if (res.data.status === "success") {
         setNotif([]);
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      console.error(err);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
@@ -91,19 +72,16 @@ export default function Notifications() {
   useEffect(() => {}, [notif]);
 
   useEffect(() => {
-    if (status === 'authenticated' && session.access_token) {
-      fetchNotifications(session.access_token);
-    } else if (status !== "loading") {
-      router.push('/');
-    }
-  }, [status, session, user, setUser, router]);
+
+    fetchNotifications();
+  }, []);
 
   const NotificationsList = () => {
     return(
       <div className="notif">
         <div className="buttonBar">
           <h2>Powiadomienia: </h2>
-          <button className="clearNotifications" onClick={() => clearNotifications(session.access_token)}>Wyczyść</button>
+          <button className="clearNotifications" onClick={clearNotifications}>Wyczyść</button>
         </div>
         <div className="notifList">
           <ul>

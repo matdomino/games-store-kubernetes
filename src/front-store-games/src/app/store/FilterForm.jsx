@@ -9,7 +9,7 @@ const GET_GAMES = '/storegames';
 
 const inputStyle = "bg-gun-powder-950 shadow-custom border-1 rounded-custom pl-2";
 
-export default function FilterForm ({ setGames, accessToken }) {
+export default function FilterForm ({ setGames }) {
   const router = useRouter();
 
   const initialValues = {
@@ -51,26 +51,9 @@ export default function FilterForm ({ setGames, accessToken }) {
       let res = null;
 
       if (values.searchPhrase) {
-        res = await axios.post(
-          SEARCH_GAMES,
-          searchData,
-          {
-            withCredentials: true,
-            headers: {
-              Authorization: `Bearer ${accessToken}`
-            }
-          });
-
+        res = await axios.post(SEARCH_GAMES, searchData, { withCredentials: true });
       } else {
-        res = await axios.post(
-          GET_GAMES,
-          filterData,
-          {
-            withCredentials: true,
-            headers: {
-              Authorization: `Bearer ${accessToken}`
-            }
-          });
+        res = await axios.post(GET_GAMES, filterData, { withCredentials: true });
       }
 
       if (res.data.status === "success") {
@@ -79,11 +62,11 @@ export default function FilterForm ({ setGames, accessToken }) {
         alert('Wystąpił błąd podczas przetwarzania żądania.');
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }

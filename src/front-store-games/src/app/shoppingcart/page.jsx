@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useContext, useState } from "react";
-import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import UserContext from "../context/UserContext";
 import { setUserData } from "../setUserContext";
@@ -13,32 +12,24 @@ const CHECKOUT_URL = '/checkout';
 const FINALIZE_URL = '/finalizeorder';
 
 export default function ShoppingCart() {
-  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const [ reload, setReload ] = useState(false);
   const [ checkoutData, setCheckoutData ] = useState(null);
   const router = useRouter();
 
-  const getChekout = async (accessToken) => {
+  const getChekout = async () => {
     try {
-      const res = await axios.get(
-        CHECKOUT_URL,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
+      const res = await axios.get(CHECKOUT_URL, { withCredentials: true });
 
       if (res.status === 200) {
         setCheckoutData(res.data);
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
@@ -46,81 +37,58 @@ export default function ShoppingCart() {
   };
 
   useEffect(() => {
-    if (status === 'authenticated' && session.access_token) {
-      if (Object.keys(user).length === 0) {
-        const isLoggedIn = setUserData(setUser, session.access_token);
-        if (!isLoggedIn) {
-          router.push('/');
-        }
+    if (Object.keys(user).length === 0) {
+      const isLoggedIn = setUserData(setUser);
+      if (!isLoggedIn) {
+        router.push('/login');
       }
-
-      getChekout(session.access_token);
-    } else if (status !== "loading") {
-      router.push('/');
     }
-  }, [status, session, user, setUser, router, reload]);
 
-  const finalizeOrder = async (accessToken) => {
+    getChekout();
+  }, [user]);
+
+  const finalizeOrder = async () => {
     try {
-      const res = await axios.post(
-        FINALIZE_URL,
-        {},
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
+      const res = await axios.post(FINALIZE_URL, { withCredentials: true });
 
       if (res.status === 200) {
         alert('Twoje zamówienie zostało zrealizowane!');
-        await setUserData(setUser, accessToken);
+        await setUserData(setUser);
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 400 && err.response.data.error === "Brak informacji rozliczeniowych.") {
-          alert("Brak informacji rozliczeniowych, uzupełnij adres.");
-          router.push('/profile');
-        }
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
     }
   };
 
-  const deleteFromCart = async (gameId, accessToken) => {
+  const deleteFromCart = async (gameId) => {
     try {
       const DELETE_URL = `/deletefromcart/${gameId}`;
-      const res = await axios.delete(
-        DELETE_URL,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
+      const res = await axios.delete(DELETE_URL, { withCredentials: true });
 
       if (res.status === 200) {
         alert("Usunięto pozycje z koszyka");
         setReload(!reload);
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
     }
   };
 
-  const Cart = ({checkoutData, accessToken}) => {
+  const Cart = ({checkoutData}) => {
     return(
       <div className="cart-box">
         <h1>Koszyk:</h1>
@@ -137,7 +105,7 @@ export default function ShoppingCart() {
                         </div>
                         <div className="options">
                           <span>{elem.price} zł</span>
-                          <button onClick={() => deleteFromCart(elem._id, accessToken)}>Usuń</button>
+                          <button onClick={() => deleteFromCart(elem._id)}>Usuń</button>
                         </div>
                       </div>
                     </li>
@@ -159,7 +127,7 @@ export default function ShoppingCart() {
                 </ul>
               </div>
               <div className="button-box">
-                <button onClick={() => finalizeOrder(accessToken)}>Kup gry</button>
+                <button onClick={() => finalizeOrder()}>Kup gry</button>
               </div>
             </div>
         </div>
@@ -171,7 +139,7 @@ export default function ShoppingCart() {
     <>
       {user.username && <NavBar user={user} />}
       <main>
-        { checkoutData ? <Cart checkoutData={checkoutData} accessToken={session.access_token} /> : null }
+        { checkoutData ? <Cart checkoutData={checkoutData} /> : null }
       </main>
     </>
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useContext, useState, useRef } from "react";
-import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import UserContext from "../context/UserContext";
 import { setUserData } from "../setUserContext";
@@ -14,7 +13,6 @@ const GAMES_LIBRARY = '/getownedgames';
 const ADD_FAV = '/addtofavourites';
 
 export default function Library() {
-  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const router = useRouter();
   const [ games, setGames ] = useState([]);
@@ -24,27 +22,21 @@ export default function Library() {
   const [ type, setType ] = useState(null);
   const selectedRef = useRef(null);
 
-  const getLibrary = async (accessToken) => {
+  const getLibrary = async () => {
     try {
-      const res = await axios.get(
-        GAMES_LIBRARY,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
+      const res = await axios.get(GAMES_LIBRARY, { withCredentials: true });
 
       if (res.status === 200) {
         setGames(res.data.games);
         setFavGames(res.data.favouriteGames);
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
+          console.error(user);
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
@@ -52,67 +44,56 @@ export default function Library() {
   };
 
   useEffect(() => {
-    if (status === 'authenticated' && session.access_token) {
-      if (Object.keys(user).length === 0) {
-        const isLoggedIn = setUserData(setUser, session.access_token);
-        if (!isLoggedIn) {
-          router.push('/');
-        }
+    if (Object.keys(user).length === 0) {
+      const isLoggedIn = setUserData(setUser);
+      if (!isLoggedIn) {
+        router.push('/login');
       }
-
-      getLibrary(session.access_token);
-    } else if (status !== "loading") {
-      router.push('/');
     }
-  }, [refresh, status, session, user, setUser, router]);
+    getLibrary();
+  }, [refresh]);
 
-  const getGamesDetails = async (elemId, accessToken) => {
+  const getGamesDetails = async (elemId) => {
     const GAME_URL = `/gamedetails/${elemId}`;
 
     try {
-      const res = await axios.get(
-        GAME_URL,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-
-        });
+      const res = await axios.get(GAME_URL, { withCredentials: true });
       if (res.data.status === "success") {
         setSelectedDetails(res.data.game);
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
-          router.push('/');
-        }
-      } else {
+      console.error(err);
+      if (err.message.includes('Network Error')) {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
+      } else if (err.response.status === 500) {
+        setType(null);
+      } else if (err.response.status === 404) {
+        setType(null);
+      } else {
+        router.push('/');
       }
     }
   };
 
-  const handleClickFavourite = async (elemId, accessToken) => {
+  const handleClickFavourite = async (elemId) => {
     selectedRef.current = elemId;
-    await getGamesDetails(elemId, accessToken);
+    await getGamesDetails(elemId);
     setType("fav");
   };
 
-  const handleClick = async (elemId, accessToken) => {
+  const handleClick = async (elemId) => {
     selectedRef.current = elemId;
-    await getGamesDetails(elemId, accessToken);
+    await getGamesDetails(elemId);
     setType("normal");
   };
 
-  const GamesList = ({ games, favGames, accessToken }) => {
+  const GamesList = ({ games, favGames }) => {
     return(
       <div className="gamesList">
         <h3>Ulubione:</h3>
         <ul className="favourite">
           {favGames.map((elem, index) => (
-            <li key={index} onClick={() => handleClickFavourite(elem.id, accessToken)}>
+            <li key={index} onClick={() => handleClickFavourite(elem.id)}>
               {elem.name}
             </li>
           ))}
@@ -121,7 +102,7 @@ export default function Library() {
         <ul className="games">
           {games.map((elem, index) => (
             !favGames.some(favGame => favGame.id === elem.id) && (
-              <li key={index} onClick={() => handleClick(elem.id, accessToken)}>
+              <li key={index} onClick={() => handleClick(elem.id)}>
                 {elem.name}
               </li>
             )
@@ -131,19 +112,12 @@ export default function Library() {
     );
   };
 
-  const addTofav = async (accessToken) => {
+  const addTofav = async () => {
     try {
       const data = {
         gameId: selectedRef.current
       };
-      const res = await axios.post(ADD_FAV,
-        data,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
+      const res = await axios.post(ADD_FAV, data, { withCredentials: true });
 
       if (res.status === 200) {
         if (type === "fav") {
@@ -155,11 +129,12 @@ export default function Library() {
         setRefresh(!refresh);
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
+          console.error(user);
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
@@ -170,16 +145,16 @@ export default function Library() {
     router.push(`/returngame/${selectedRef.current}`);
   };
 
-  const GamesOptions = ({type, accessToken}) => {
+  const GamesOptions = ({type}) => {
     return(
       <div className="GameDetails">
         <img src={selectedDetails.mainPhoto} alt="" />
         <div className="navBar">
-          <button className="fav" onClick={() => addTofav(session.access_token)}>{type === "normal" ? "Dodaj do ulubionych" : "Usuń z ulubionych"}</button>
+          <button className="fav" onClick={addTofav}>{type === "normal" ? "Dodaj do ulubionych" : "Usuń z ulubionych"}</button>
         </div>
         <div className="options">
           <div className="review">
-            <ReviewGame elemId={selectedRef.current} accessToken={accessToken} />
+            <ReviewGame elemId={selectedRef.current} />
           </div>
         </div>
         <div className="returnUrl">
@@ -197,18 +172,14 @@ export default function Library() {
     );
   };
 
-  if (status === 'loading') {
-    return;
-  }
-
   return (
     <div>
       {user.username && <NavBar user={user} />}
       <main>
         <div className="gamesMenu">
-          <GamesList games={games} favGames={favGames} accessToken={session.access_token} />
+          <GamesList games={games} favGames={favGames} />
           <div className="optionDiv">
-            {type ? <GamesOptions gameId={selectedRef.current} type={type} accessToken={session.access_token}/> : <ShowNonePrompt />}
+            {type ? <GamesOptions gameId={selectedRef.current} type={type}/> : <ShowNonePrompt />}
           </div>
         </div>
       </main>

@@ -7,7 +7,7 @@ const RETURN_URL = '/returngame';
 
 const inputStyle = "bg-gun-powder-950 border-1 rounded-custom pl-2";
 
-export default function ReturnGameModule ({ elemId, gameName, accessToken }) {
+export default function ReturnGameModule ({ elemId, gameName }) {
   const router = useRouter();
 
   const initialValues = {
@@ -26,14 +26,7 @@ export default function ReturnGameModule ({ elemId, gameName, accessToken }) {
     };
 
     try {
-      const res = await axios.post(RETURN_URL,
-        data,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
+      const res = await axios.post(RETURN_URL, data, { withCredentials: true });
 
       if (res.data.status === "success") {
         alert("Wysłano żadanie zwrotu.");
@@ -41,11 +34,13 @@ export default function ReturnGameModule ({ elemId, gameName, accessToken }) {
         router.push('/library');
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
+
+        router.push('/library');
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }

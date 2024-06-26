@@ -1,13 +1,15 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
-const KeycloakConnect = require('keycloak-connect');
-const { setCookies } = require('./rest-api/setCookies');
-const { checkRole } = require('./rest-api/auth');
-const { deleteCookies } = require('./rest-api/deleteCookies');
+const tokenKey = require('./tokenKey');
+const { login } = require('./rest-api/login');
+const { register } = require('./rest-api/register');
+const { logout } = require('./rest-api/logout');
 const { getUsers } = require('./rest-api/employee/getUsersList');
 const { getUser } = require('./rest-api/employee/getUser');
 const { banUser } = require('./rest-api/employee/banUser');
@@ -27,7 +29,11 @@ const { clearNotifications } = require('./rest-api/clearNotifications');
 const { getNotifications } = require('./rest-api/getNotifications');
 const { getUserData } = require('./rest-api/getUserData');
 const { getWalletBalance } = require('./rest-api/getWalletBalance');
+const { changeUsername } = require('./rest-api/changeUsername');
+const { changePassword } = require('./rest-api/changePassword');
 const { changeAdress } = require('./rest-api/changeAdress');
+const { changeEmail } = require('./rest-api/changeEmail');
+const { deleteAccount } = require('./rest-api/deleteAccount');
 const { addBalance } = require('./rest-api/addBalance');
 const { finalizeOrder } = require('./rest-api/finalizeOrder');
 const { getOwnedGames } = require('./rest-api/getOwnedGames');
@@ -42,33 +48,17 @@ const { getRefunds } = require('./rest-api/getRefunds');
 
 
 const app = express();
-const port = 8000;
+const port = 3000;
 app.use(cors({
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
-  origin: 'http://localhost:3000'
+  origin: 'http://localhost:8080'
 }));
-
-// PRZENIESC CONFIG DO INNEGO PLIKU LUB DO ZMIENNYCH
-const keycloakConfig = {
-  clientId: `games-store-api`,
-  bearerOnly: true,
-  serverUrl: `http://localhost:8080`,
-  realm: `games-store`,
-  credentials: {
-    secret: `AEJV8XyKkoPzIiL31eGMbf6yecAIlryq`,
-  },
-};
-
-const keycloak = new KeycloakConnect({}, keycloakConfig);
 
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(keycloak.middleware());
 
-// ZMIENIC URL BAZY!!!!!!!!!!!!!!!!
-// const dbUrl = 'mongodb://mongo-db:27017/';
-const dbUrl = 'mongodb://localhost:27017/';
+const dbUrl = 'mongodb://mongo-db:27017/';
 const dbName = 'games-store-db';
 
 async function connect() {
@@ -87,165 +77,193 @@ async function connect() {
     const closedReturnsCollection = db.collection('closed-returns');
     const transactionsCollection = db.collection('transactions-history');
 
-    app.delete('/deletecookies', async (req, res) => {
-      await deleteCookies(req, res);
+    app.post('/login', async (req, res) => {
+      await login(req, res, usersCollection, bcrypt, jwt, tokenKey);
     });
 
-    app.post('/setcookies', keycloak.protect(), async (req, res) => {
-      await setCookies(req, res, usersCollection);
+    app.post('/register', async (req, res) => {
+      await register(req, res, usersCollection, bcrypt, jwt, tokenKey);
+    });
+
+    app.delete('/logout', async (req, res) => {
+      await logout(req, res);
     });
 
     // --- EMPLOYEE ---
 
-    app.get('/users', keycloak.protect(), checkRole('employee'), async (req, res) => {
+    app.get('/users', async (req, res) => {
       await getUsers(req, res, usersCollection);
     });
 
-    app.get('/user/:id', keycloak.protect(), checkRole('employee'), async (req, res) => {
+    app.get('/user/:id', async (req, res) => {
       await getUser(req, res, usersCollection, ObjectId);
     });
 
-    app.delete('/banuser/:id', keycloak.protect(), checkRole('employee'), async (req, res) => {
+    app.delete('/banuser/:id', async (req, res) => {
       await banUser(req, res, usersCollection, ObjectId);
     });
 
-    app.post('/addgame', keycloak.protect(), checkRole('employee'), upload.single('file'), async (req, res) => {
+    app.post('/addgame', upload.single('file'), async (req, res) => {
       await addGame(req, res, gamesCollection);
     });
 
-    app.get('/getsupportlist', keycloak.protect(), checkRole('employee'), async (req, res) => {
+    app.get('/getsupportlist', async (req, res) => {
       await getSupportList(req, res, pendingSupportCollection);
     });
 
-    app.post('/respondtosupportmsg', keycloak.protect(), checkRole('employee'), async (req, res) => {
+    app.post('/respondtosupportmsg', async (req, res) => {
       await respondToSupport(req, res, pendingSupportCollection, closedSupportCollection, usersCollection, ObjectId);
     });
 
-    app.get('/getrefundslist', keycloak.protect(), checkRole('employee'), async (req, res) => {
+    app.get('/getrefundslist', async (req, res) => {
       await getRefundsList(req, res, pendingReturnsCollection);
     });
 
-    app.post('/respondtorefund', keycloak.protect(), checkRole('employee'), async (req, res) => {
+    app.post('/respondtorefund', async (req, res) => {
       await respondToRefund(req, res, pendingReturnsCollection, closedReturnsCollection, transactionsCollection, usersCollection, gamesCollection, ObjectId);
     });
 
-    app.get('/transactionhistory', keycloak.protect(), checkRole('employee'), async (req, res) => {
+    app.get('/transactionhistory', async (req, res) => {
       await getFullTransactionHistory(req, res, transactionsCollection);
     });
 
     // --- USER ---
 
-    app.post('/storegames', keycloak.protect(), async (req, res) => {
+    app.post('/storegames', async (req, res) => {
       await getGames(req, res, gamesCollection);
     });
 
-    app.post('/searchgames', keycloak.protect(), async (req, res) => {
+    app.post('/searchgames', async (req, res) => {
       await searchGames(req, res, gamesCollection);
     });
 
-    app.get('/gamedetails/:gameId', keycloak.protect(), async(req, res) => {
+    app.get('/gamedetails/:gameId', async(req, res) => {
       await getGameDetails(req, res, gamesCollection, ObjectId);
     });
 
-    app.put('/addgametocart/:gameId', keycloak.protect(), async (req, res) => {
+    app.put('/addgametocart/:gameId', async (req, res) => {
       await addToCart(req, res, usersCollection, gamesCollection, ObjectId);
     });
 
-    app.delete('/deletefromcart/:gameId', keycloak.protect(), async (req, res) => {
+    app.delete('/deletefromcart/:gameId', async (req, res) => {
       await deleteFromCart(req, res, usersCollection);
     });
 
-    app.get('/checkout', keycloak.protect(), async (req, res) => {
+    app.get('/checkout', async (req, res) => {
       await checkOut(req, res, usersCollection, gamesCollection, ObjectId);
     });
 
-    app.delete('/clearnotifications', keycloak.protect(), async (req, res) => {
+    app.delete('/clearnotifications', async (req, res) => {
       await clearNotifications(req, res, usersCollection);
     });
 
-    app.get('/notifications', keycloak.protect(), async (req, res) => {
+    app.get('/notifications', async (req, res) => {
       await getNotifications(req, res, usersCollection);
     });
 
-    app.get('/getuserdata', keycloak.protect(), async (req, res) => {
+    app.get('/getuserdata', async (req, res) => {
       getUserData(req, res, usersCollection)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.get('/walletbalance', keycloak.protect(), async (req, res) => {
+    app.get('/walletbalance', async (req, res) => {
       getWalletBalance(req, res, usersCollection)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.put('/changeaddress', keycloak.protect(), async (req, res) => {
+    app.put('/changeusername', async (req, res) => {
+      changeUsername(req, res, usersCollection, bcrypt)
+        .then(result => res.json(result))
+        .catch(error => res.status(error.status).json({ error: error.error }));
+    });
+
+    app.put('/changepassword', async (req, res) => {
+      changePassword(req, res, usersCollection, bcrypt)
+        .then(result => res.json(result))
+        .catch(error => res.status(error.status).json({ error: error.error }));
+    });
+
+    app.put('/changeaddress', async (req, res) => {
       changeAdress(req, res, usersCollection)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.put('/addbalance', keycloak.protect(), async (req, res) => {
+    app.put('/changeemail', async (req, res) => {
+      changeEmail(req, res, usersCollection, bcrypt)
+        .then(result => res.json(result))
+        .catch(error => res.status(error.status).json({ error: error.error }));
+    });
+
+    app.delete('/deleteaccount', async (req, res) => {
+      deleteAccount(req, res, usersCollection, bcrypt)
+        .then(result => res.json(result))
+        .catch(error => res.status(error.status).json({ error: error.error }));
+    });
+
+    app.put('/addbalance', async (req, res) => {
       addBalance(req, res, usersCollection, transactionsCollection)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.post('/finalizeorder', keycloak.protect(), async (req, res) => {
+    app.post('/finalizeorder', async (req, res) => {
       finalizeOrder(req, res, usersCollection, transactionsCollection, gamesCollection, ObjectId)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.get('/getownedgames', keycloak.protect(), async (req, res) => {
+    app.get('/getownedgames', async (req, res) => {
       getOwnedGames(req, res, usersCollection)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.post('/addtofavourites', keycloak.protect(), async (req, res) => {
+    app.post('/addtofavourites', async (req, res) => {
       addToFavourites(req, res, usersCollection, ObjectId)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.post('/reviewgame', keycloak.protect(), async (req, res) => {
+    app.post('/reviewgame', async (req, res) => {
       reviewGame(req, res, usersCollection, gamesCollection, ObjectId)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.post('/returngame', keycloak.protect(), async (req, res) => {
+    app.post('/returngame', async (req, res) => {
       returnGame(req, res, usersCollection, pendingReturnsCollection)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.post('/sendsupportmsg', keycloak.protect(), async (req, res) => {
+    app.post('/sendsupportmsg', async (req, res) => {
       sendSupportMsg(req, res, usersCollection, pendingSupportCollection)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.get('/gettransactionshistory', keycloak.protect(), async (req, res) => {
+    app.get('/gettransactionshistory', async (req, res) => {
       getHistory(req, res, usersCollection)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.get('/gettransactiondetails/:transId', keycloak.protect(), async (req, res) => {
+    app.get('/gettransactiondetails/:transId', async (req, res) => {
       getHistoryDetails(req, res, usersCollection, transactionsCollection, ObjectId)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.get('/getsupportmsgs/', keycloak.protect(), async (req, res) => {
+    app.get('/getsupportmsgs/', async (req, res) => {
       getSupportMsgs(req, res, usersCollection, pendingSupportCollection, closedSupportCollection, ObjectId)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));
     });
 
-    app.get('/getrefunds/', keycloak.protect(), async (req, res) => {
+    app.get('/getrefunds/', async (req, res) => {
       getRefunds(req, res, usersCollection, pendingReturnsCollection, closedReturnsCollection, ObjectId)
         .then(result => res.json(result))
         .catch(error => res.status(error.status).json({ error: error.error }));

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useContext, useState } from "react";
-import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import axios from "@/api/axios";
 import UserContext from "../context/UserContext";
@@ -13,7 +12,6 @@ import {FundsAdd, OrderFinalization, Return} from "./details";
 const HISTORY_URL = '/gettransactionshistory';
 
 export default function Notifications() {
-  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const [ history, setHistory ] = useState(null);
   const [ selectedId, setSelectedId ] = useState(null);
@@ -21,43 +19,33 @@ export default function Notifications() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchData = async (accessToken) => {
+    const fetchData = async () => {
       try {
         if (Object.keys(user).length === 0) {
-          await setUserData(setUser, accessToken);
+          await setUserData(setUser);
         }
       } catch (error) {
         console.error(error);
-        router.push('/');
+        router.push('/login');
       }
     };
 
-    if (status === 'authenticated' && session.access_token) {
-      fetchData(session.access_token);
-    } else if (status !== "loading") {
-      router.push('/');
-    }
-  }, [status, session, user, setUser, router]);
+    fetchData();
+  }, []);
 
-  const getHistoryList = async (accessToken) => {
+  const getHistoryList = async () => {
     try {
-      const res = await axios.get(
-        HISTORY_URL,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
+      const res = await axios.get(HISTORY_URL, { withCredentials: true });
       if (res.status === 200) {
         setHistory(res.data.transactions);
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      console.error(err);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
@@ -65,35 +53,24 @@ export default function Notifications() {
   };
 
   useEffect(() => {
-    if (status === 'authenticated' && session.access_token) {
-      getHistoryList(session.access_token);
-    } else if (status !== "loading") {
-      router.push('/');
-    }
-  }, [status, session, user, setUser, router]);
+    getHistoryList();
+  }, []);
 
-  const FetchTransactionDetails = async (elem, accessToken) => {
+  const FetchTransactionDetails = async (elem) => {
     const TRANSACTION_DETAILS_URL = `/gettransactiondetails/${elem}`;
     try {
-      const res = await axios.get(
-        TRANSACTION_DETAILS_URL,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
-
+      const res = await axios.get(TRANSACTION_DETAILS_URL, { withCredentials: true });
       if (res.status === 200) {
         setSelectedId(elem);
         setSelectedDetails(res.data);
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      console.error(err);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
@@ -123,7 +100,7 @@ export default function Notifications() {
         <ul>
           {history.map((elem, index) => {
             return(
-              <li key={index} id={elem} onClick={() => FetchTransactionDetails(elem, session.access_token)}>
+              <li key={index} id={elem} onClick={() => FetchTransactionDetails(elem)}>
                 ID: {elem} {selectedId === elem ? "▴" : "▾"}
                 {selectedId === elem ? <TransactionDetails details={selectedDetails} /> : null}
               </li>

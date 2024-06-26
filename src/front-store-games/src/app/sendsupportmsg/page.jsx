@@ -1,7 +1,6 @@
 "use client";
 
 import { useContext, useEffect } from "react";
-import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -16,28 +15,23 @@ const SEND_URL = '/sendsupportmsg';
 const inputStyle = "bg-gun-powder-950 shadow-custom border-1 rounded-custom pl-2";
 
 export default function SendSupportMsg () {
-  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchData = async (accessToken) => {
+    const fetchData = async () => {
       try {
         if (Object.keys(user).length === 0) {
-          await setUserData(setUser, accessToken);
+          await setUserData(setUser);
         }
       } catch (error) {
         console.error(error);
-        router.push('/');
+        router.push('/login');
       }
     };
 
-    if (status === 'authenticated' && session.access_token) {
-      fetchData(session.access_token);
-    } else if (status !== "loading") {
-      router.push('/');
-    }
-  }, [status, session, user, setUser, router]);
+    fetchData();
+  }, []);
 
   const initialValues = {
     topic: '',
@@ -56,15 +50,7 @@ export default function SendSupportMsg () {
     };
 
     try {
-      const sendMsg = await axios.post(
-        SEND_URL,
-        messageData,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
-        });
+      const sendMsg = await axios.post(SEND_URL, messageData, { withCredentials: true });
 
       if (sendMsg.status === 200) {
         alert('Wysłano wiadomość.');
@@ -73,11 +59,11 @@ export default function SendSupportMsg () {
 
       resetForm();
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }

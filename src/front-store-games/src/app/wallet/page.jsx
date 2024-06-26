@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useContext } from "react";
-import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import UserContext from "../context/UserContext";
 import { setUserData } from "../setUserContext";
@@ -9,7 +8,6 @@ import NavBar from "../NavBar";
 import './style.scss';
 
 export default function Wallet() {
-  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const router = useRouter();
 
@@ -20,20 +18,16 @@ export default function Wallet() {
     const fetchData = async () => {
       try {
         if (Object.keys(user).length === 0) {
-          await setUserData(setUser, session.access_token);
+          await setUserData(setUser);
         }
       } catch (error) {
         console.error(error);
-        router.push('/');
+        router.push('/login');
       }
     };
 
-    if (status === 'authenticated' && session.access_token) {
-      fetchData();
-    } else if (status !== "loading") {
-      router.push('/');
-    }
-  }, [status, session, user, setUser, router]);
+    fetchData();
+  });
 
   return (
     <>

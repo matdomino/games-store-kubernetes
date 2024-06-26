@@ -22,16 +22,6 @@ const finalizeOrder = async (req, res, usersCollection, transactionsCollection, 
           return;
         }
 
-        if (userData.address.firstName === null ||
-          userData.address.lastName === null ||
-          userData.address.city === null ||
-          userData.address.home === null ||
-          userData.address.postCode === null) {
-
-          reject({ status: 400, error: "Brak informacji rozliczeniowych." });
-          return;
-        }
-
         const total = shoppingCart.reduce((acc, elem) => acc + elem.price, 0);
         const roundedTotal = Number(total.toFixed(2));
 

@@ -2,42 +2,24 @@
 
 import { useEffect, useState, useContext } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from 'next-auth/react';
 import UserContext from "../context/UserContext";
 import { setUserData } from "../setUserContext";
 import NavBar from "../NavBar";
 import axios from "@/api/axios";
-import cookie from 'js-cookie';
 import './style.scss';
 import FilterForm from "./FilterForm";
 
 
 const GAMES_URL = '/storegames';
 
-const removeAllCookies = () => {
-  const allCookies = cookie.get();
-  for (const cookieName in allCookies) {
-    cookie.remove(cookieName);
-  }
-};
-
 export default function Store() {
-  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const [ games, setGames ] = useState([]);
   const router = useRouter();
 
-  const getGames = async (body, access_token) => {
+  const getGames = async (body) => {
     try {
-      const res = await axios.post(
-        GAMES_URL,
-        body,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${access_token}`
-          }
-        });
+      const res = await axios.post(GAMES_URL, body, { withCredentials: true });
       if (res.data.status === "success") {
         setGames(res.data.games);
       } else {
@@ -45,12 +27,11 @@ export default function Store() {
         alert('Wystąpił błąd podczas przetwarzania żądania.');
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
-          removeAllCookies();
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
@@ -58,24 +39,19 @@ export default function Store() {
   };
 
   useEffect(() => {
-    if (status === 'authenticated' && session.access_token) {
-      if (Object.keys(user).length === 0) {
-        const isLoggedIn = setUserData(setUser, session.access_token);
-        if (!isLoggedIn) {
-          router.push('/');
-        }
+    if (Object.keys(user).length === 0) {
+      const isLoggedIn = setUserData(setUser);
+      if (!isLoggedIn) {
+        router.push('/login');
       }
-
-      const initialSearchBody = {
-        sortBy: "name",
-        sortOrder: "asc"
-      };
-
-      getGames(initialSearchBody, session.access_token);
-    } else if (status !== "loading") {
-      router.push('/');
     }
-  }, [status, session, user, setUser, router]);
+    const initialSearchBody = {
+      "sortBy": "name",
+      "sortOrder": "asc"
+    };
+
+    getGames(initialSearchBody);
+  }, []);
 
   const redirectToGame = (gameId) => {
     router.push(`/game/${gameId}`);
@@ -109,7 +85,7 @@ export default function Store() {
       <main>
         <div className="gamesListClass">
           <div className="options">
-            { games.length > 0 ? <FilterForm className="FilterForm" setGames={setGames} accessToken={session.access_token} /> : null }
+            { games.length > 0 ? <FilterForm className="FilterForm" setGames={setGames} /> : null }
           </div>
           <div className="games">
             { games.length > 0 ? <GamesList games={games} /> : null }

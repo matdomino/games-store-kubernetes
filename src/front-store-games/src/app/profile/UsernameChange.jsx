@@ -3,36 +3,34 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from "@/api/axios";
 
-const REVIEW_URL = '/reviewgame';
+const USERNAME_CHANGE = '/changeusername';
 
 const inputStyle = "bg-gun-powder-950 shadow-custom border-1 rounded-custom pl-2";
 
-export default function ReviewGame ({ elemId }) {
+export default function EmailChange ({ backFun }) {
   const router = useRouter();
 
   const initialValues = {
-    gameId: elemId,
-    grade: '',
-    comment: ''
+    username: '',
+    password: ''
   };
 
   const validationSchema = Yup.object({
-    grade: Yup.string().required('Wybierz ocenę gry'),
-    comment: Yup.string().min(5, "Za krótki komentarz").max(200, "Za długi komentarz").required('Komentarz nie może być pusty')
+    username: Yup.string().min(4, "Za krótka nazwa użytkownika").max(20, "Za długa nazwa użytkownika").required('Nazwa użytkownika nie może być pusta.'),
+    password: Yup.string().required("Hasło nie może być puste")
   });
 
   const onSubmit = async (values, { resetForm }) => {
-    const data = {
-      gameId: values.gameId,
-      grade: parseInt(values.grade),
-      comment: values.comment
+    const userData = {
+      user: values.username,
+      pass: values.password
     };
 
     try {
-      const res = await axios.post(REVIEW_URL, data, { withCredentials: true });
+      const res = await axios.put(USERNAME_CHANGE, userData, { withCredentials: true });
 
       if (res.data.status === "success") {
-        alert("Zrecenzowano grę");
+        router.push('/');
       }
     } catch (err) {
       if (err.response && err.response.data.error) {
@@ -58,37 +56,34 @@ export default function ReviewGame ({ elemId }) {
 
   return(
     <form className="form" onSubmit={handleSubmit}>
+      <button className="goBack" onClick={backFun}>←</button>
       <div className="input">
-        <h3>Zrecenzuj grę:</h3>
+        <h3>Zmień nazwe użytkownika:</h3>
         <label>
-          Ocena:
+          Nazwa:
         </label>
-        <select
+        <input
           className={inputStyle}
-          name="grade"
-          value={values.grade}
+          type="text"
+          name="username"
+          value={values.username}
           onChange={handleChange}
-        >
-          <option value="">Wybierz ocenę</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-        </select>
+        />
         <label>
-          Komentarz:
+          Hasło:
         </label>
-        <textarea
+        <input
           className={inputStyle}
-          name="comment"
-          value={values.comment}
+          type="password"
+          name="password"
+          value={values.password}
           onChange={handleChange}
         />
       </div>
-      <button type="submit">Wyślij</button>
+      <button type="submit">Zmień</button>
       <div className="errs">
-        <span className="text-xs text-vivid-violet-200">{errors.comment}</span>
+        <span className="text-xs text-vivid-violet-200">{errors.username}</span>
+        <span className="text-xs text-vivid-violet-200">{errors.password}</span>
       </div>
     </form>
   );

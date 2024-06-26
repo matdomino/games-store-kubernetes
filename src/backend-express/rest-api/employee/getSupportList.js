@@ -5,9 +5,15 @@ const getSupportList = async (req, res, pendingSupportCollection) => {
     const isValidLogin = await verifyAuth(req, res);
 
     if (isValidLogin === true) {
-      const list = await pendingSupportCollection.find().toArray();
+      const role = req.cookies.roleType;
 
-      res.json({ list: list });
+      if (role === "employee") {
+        const list = await pendingSupportCollection.find().toArray();
+
+        res.json({ list: list });
+      } else {
+        res.status(401).json({ error: "Nie masz wymaganych uprawnień" });
+      }
     }
   } catch (err) {
     console.error(err);

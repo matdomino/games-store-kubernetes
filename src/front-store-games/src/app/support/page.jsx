@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useContext } from "react";
-import { useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import UserContext from "../context/UserContext";
 import { setUserData } from "../setUserContext";
@@ -12,24 +11,15 @@ import './style.scss';
 const GET_SUPPORT_MSGS = '/getsupportmsgs';
 
 export default function Support() {
-  const { data: session, status } = useSession();
   const { user, setUser } = useContext(UserContext);
   const [ pending, setPending ] = useState([]);
   const [ closed, setClosed ] = useState([]);
   const router = useRouter();
 
   useEffect( () => {
-    const fetchData = async (accessToken) => {
+    const fetchData = async () => {
       try {
-        const msgs = await axios.get(
-          GET_SUPPORT_MSGS,
-          {
-            withCredentials: true,
-            headers: {
-              Authorization: `Bearer ${accessToken}`
-            }
-          });
-
+        const msgs = await axios.get(GET_SUPPORT_MSGS, { withCredentials: true });
         if (msgs.status === 200) {
           setClosed(msgs.data.closed);
           setPending(msgs.data.peding);
@@ -37,42 +27,33 @@ export default function Support() {
           alert('Wystąpił błąd podczas przetwarzania żądania.');
         }
       } catch (err) {
-        if (err.response && err.response.data) {
-          if (err.response.status === 401 || err.response.status === 403) {
-            alert(err.response.data);
+        if (err.response && err.response.data.error) {
+          if (err.response.status === 401) {
             router.push('/');
           }
+          alert(err.response.data.error);
         } else {
           alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
         }
       }
     };
-
-    if (status === 'authenticated' && session.access_token) {
-      fetchData(session.access_token);
-    } else if (status !== "loading") {
-      router.push('/');
-    }
-  }, [status, session, user, setUser, router]);
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (Object.keys(user).length === 0) {
-          await setUserData(setUser, session.access_token);
+          await setUserData(setUser);
         }
       } catch (error) {
         console.error(error);
-        router.push('/');
+        router.push('/login');
       }
     };
 
-    if (status === 'authenticated' && session.access_token) {
-      fetchData();
-    } else if (status !== "loading") {
-      router.push('/');
-    }
-  }, [status, session, user, setUser, router]);
+    fetchData();
+  });
 
   useEffect(() => {
   }, [pending, closed]);

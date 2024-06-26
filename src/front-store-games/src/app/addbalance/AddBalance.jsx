@@ -9,7 +9,7 @@ import { setUserData } from "../setUserContext";
 const ADDBALANCE_URL = '/addbalance';
 const inputStyle = "bg-gun-powder-950 shadow-custom border-1 rounded-custom pl-2";
 
-export default function AddBalance ({ accessToken }) {
+export default function AddBalance () {
   const { user, setUser } = useContext(UserContext);
   const [ isLoading, setIsLoading ] = useState(false);
   const router = useRouter();
@@ -35,22 +35,13 @@ export default function AddBalance ({ accessToken }) {
     };
 
     try {
-      const res = await axios.put(
-        ADDBALANCE_URL,
-        data,
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
-
+      const res = await axios.put(ADDBALANCE_URL, data, { withCredentials: true });
       if (res.data.status === "success") {
         try {
-          await setUserData(setUser, accessToken);
+          await setUserData(setUser);
         } catch (error) {
           console.error(error);
-          router.push('/');
+          router.push('/login');
         }
 
         alert("Pomyślnie dodano środki na konto.");
@@ -58,15 +49,12 @@ export default function AddBalance ({ accessToken }) {
         router.push('/wallet');
       }
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.status === 400 && err.response.data.error === "Brak informacji rozliczeniowych.") {
-          alert("Brak informacji rozliczeniowych, uzupełnij adres.");
-          router.push('/profile');
-        }
-        if (err.response.status === 401 || err.response.status === 403) {
-          alert(err.response.data);
+      console.error(err);
+      if (err.response && err.response.data.error) {
+        if (err.response.status === 401) {
           router.push('/');
         }
+        alert(err.response.data.error);
       } else {
         alert('Brak odpowiedzi serwera. Skontaktuj się z administratorem.');
       }
