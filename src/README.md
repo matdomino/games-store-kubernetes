@@ -15,33 +15,28 @@ A web application of a digital games store.
 - Node.js, express,
 - Jsonwebtoken,
 - MognoDB,
+- Nginx,
+- Kubernetes,
 
 
 ## Installation
-Run using Docker with commands below `(run commands in /games-store/ directory)`:
-
-### Step 0 (optional)
-Uncomment this line in `docker-compose.yml` if you want to access database outside Docker.
-```
-ports:
-  - "27017:27017"
-```
+Run using Kubernetes with commands below `(run commands in /kubernetes/ directory)`:
 
 ### Step 1
-Set up containers with db, back-end, front-end:
+Set up cluster with bash script:
 ```
-docker-compose up -d
+./start.sh
 ```
 
 ### Step 2
 Set up database collections and example employee user:
 ```
-docker exec -it games-store-db mongosh games-store-db ./setup/dbInit.mongodb.js
+kubectl exec <mongo-pod> -- mongosh games-store-db ./setup/dbInit.mongodb.js
 ```
 
 ### Step 3
 Access the app at link below:
-#### [http://localhost:8080/](http://localhost:8080/)
+#### [http://localhost/](http://localhost/)
 
 ## Endpoints description
 ### Database queries examples in Postman:
