@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: mongo-db
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: mongo-db
@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
       - name: mongo-db
-        image: src-mongo-db:latest
-        imagePullPolicy: Never
+        image: matdomino/games-store-db
         ports:
         - containerPort: 27017
         volumeMounts:
@@ -23,11 +22,11 @@ spec:
           mountPath: /data/db
         resources:
           requests:
-            memory: "1Gi"
+            memory: "2Gi"
             cpu: "1"
           limits:
-            memory: "2Gi"
-            cpu: "2"
+            memory: "4Gi"
+            cpu: "3"
       volumes:
       - name: mongo-db-storage
         persistentVolumeClaim:

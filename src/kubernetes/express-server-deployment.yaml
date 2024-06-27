@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
       - name: express-server
-        image: src-express-server:latest
-        imagePullPolicy: Never
+        image: matdomino/games-store-express
         ports:
         - containerPort: 8000
         env:

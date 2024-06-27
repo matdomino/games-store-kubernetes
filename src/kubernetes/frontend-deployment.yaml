@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: src-frontend:latest
-        imagePullPolicy: Never
+        image: matdomino/games-store-front
         ports:
         - containerPort: 3000
         resources:
