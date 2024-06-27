@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: express-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: express-server
+  template:
+    metadata:
+      labels:
+        app: express-server
+    spec:
+      containers:
+      - name: express-server
+        image: src-express-server:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DB_URL
+          value: mongodb://mongo-db:27017/games-store-db
+        - name: SECRET_TOKEN
+          value: 28c2182c2bc4ddbe90bf45c805a5b5938add271e50e283acc372ffcff2dfaa4f

@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-db
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mongo-db
+  template:
+    metadata:
+      labels:
+        app: mongo-db
+    spec:
+      containers:
+      - name: mongo-db
+        image: src-mongo-db:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongo-db-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-db-storage
+        persistentVolumeClaim:
+          claimName: mongo-db-pvc

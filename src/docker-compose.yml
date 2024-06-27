@@ -24,8 +24,6 @@ services:
     environment:
       - DB_URL=mongodb://mongo-db:27017/games-store-db
       - SECRET_TOKEN=28c2182c2bc4ddbe90bf45c805a5b5938add271e50e283acc372ffcff2dfaa4f
-    # ports:
-    #   - "8000:8000"
     depends_on:
       - mongo-db
     networks:
@@ -37,8 +35,6 @@ services:
       dockerfile: Dockerfile
     container_name: games-store-front
     restart: always
-    # ports:
-    #   - "3000:3000"
     depends_on:
       - express-server
     networks:
