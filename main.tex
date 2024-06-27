@@ -1,10 +1,12 @@
 \documentclass[12pt,a4paper]{article}
+\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{dsfont} 
 \usepackage[polish]{babel}
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage[top=1in, bottom=1.5in, left=1.25in, right=1.25in]{geometry}
+\usepackage{hyperref}
 
 \usepackage{subfig}
 \usepackage{multirow}
@@ -85,17 +87,17 @@
 \rhead{\hmwkAuthorName} % Top left header
 \lhead{\hmwkClass: \hmwkTitle} % Top center header
 \rhead{\firstxmark} % Top right header
-\lfoot{Jan Kowalski} % Bottom left footer
+\lfoot{Mateusz Domino} % Bottom left footer
 \cfoot{} % Bottom center footer
 \rfoot{} % Bottom right footer
 \renewcommand{\headrulewidth}{1pt}
 \renewcommand{\footrulewidth}{1pt}
 
     
-\newcommand{\hmwkTitle}{Tytuł projektu z technologii chmurowych} % Tytuł projektu
+\newcommand{\hmwkTitle}{Konfiguracja klastra Kubernetes dla aplikacji Games-Store} % Tytuł projektu
 \newcommand{\hmwkDueDate}{\today} % Data 
 \newcommand{\hmwkClass}{Technologie chmurowe} % Nazwa przedmiotu
-\newcommand{\hmwkAuthorName}{Jan Kowalski} % Imię i nazwisko
+\newcommand{\hmwkAuthorName}{Mateusz Domino} % Imię i nazwisko
 
 % trabalho 
 \begin{document}
@@ -122,8 +124,8 @@
 	%\vspace{2cm}
 	
 	\textbf{Gdańsk}
-	
-	\textbf{\hmwkDueDate}
+
+	\textbf{26 czerwca 2024}
 	\end{center}
 	
 \end{titlepage}
@@ -136,52 +138,163 @@
 \section{Opis projektu}
 \label{sec:Project}
 
-Tutaj wypisujemy szczegółowe informacje o celu powstania projektu (jakaś historyjka, że pewna firma/osoba potrzebuje bazy, która ...)
+Firma Games-Store Corporation, specjalizująca się w handlu grami, zleciła stworzenie nowej aplikacji webowej do sprzedaży gier różnych kategorii online. Aplikacja została stworzona przez pododział firmy. Serwis ma umożliwiać logowanie i rejestrację użytkowników, zakup oraz zwroty gier, oraz obsługiwać różne metody płatności. Również ma być dostępny panel administratora do dodawania nowych gier, dostępny tylko dla pracowników.
 
-\subsection{Opis architektury - 8 pkt}
+\subsection{Opis architektury}
 \label{sec:introduction}
-Powinna zawierać opis architektury aplikacji opartej na Kubernetes, w tym opis klastrowego systemu zarządzania kontenerami, wykorzystanych modułów i komponentów
+Architektura została zaimplementowana w środowisku Kubernetes, co umożliwia w razie potrzeby łatwe skalowanie i wdrożania nowych zmian za pomocą obrazów Docker. Węzły  klastra Kubernetes: 
+\begin{itemize}
+    \item Express-server - API do przetwarzania zapytań z frontendu oraz zwracania danych z bazy danych.
+    \item Frontend - Aplikacja frontend napisana w frameworku Next.js.
+    \item Mongo-db - Baza danych MongoDB.
+    \item Nginx-proxy - Serwer Reverse-Proxy Nginx, przekazuje zapytania do aplikacji.
+   
+\end{itemize}
 
-
-\subsection{Opis infrastruktury - 6 pkt}
+\subsection{Opis infrastruktury}
 \label{sec:Users}
 
-Powinien zawierać informacje na temat środowiska, w którym aplikacja będzie działać, a także wykorzystanych narzędzi i platformy chmurowe. Ważne jest również zwrócenie uwagi na wykorzystanie zasobów, takich jak sieci i pamięci masowej.
+\subsubsection{Środowisko uruchomieniowe}
+Aplikacja wykorzystuje środowisko Docker w następującej wersji silnika:
+\begin{itemize}
+    \item version 24.0.6
+    \item build ed223b
+\end{itemize}
 
-\subsection{Opis komponentów aplikacji - 8 pkt}
+Wersja wykorzystywanego Kubernetes: 
+\begin{itemize}
+    \item Client Version: v1.27.2
+    \item Kustomize Version: v5.0.1
+    \item Server Version: v1.27.2
+\end{itemize}
+
+\subsubsection{Zasoby obliczeniowe}
+Każda replika węzła w klastrze ma zdefiniowane minimalne i maksymalne zasoby obliczeniowe. Repliki są automatycznie tworzone i skalowane w zależności od aktualnego obciążenia, wykorzystując optymalnie zasoby.
+
+\subsubsection{Pamięć masowa}
+Dla bazy danych MongoDB, jest przydzielony wolumen PersistentValueClaim, o wielkości 5Gi na dane.
+
+
+\subsection{Opis komponentów aplikacji}
 \label{sec:FunctionalConditions}
+Aplikacja składa się się z 4 komponentów, każdy został zdefiniowany w oddzielnym pliku manifest dla Kubernetesa jako osobne pody:
 
-Powinna zawierać informacje na temat komponentów aplikacji, takich jak serwisy, aplikacje i bazy danych. W szczególności należy zwrócić uwagę na sposoby ich wdrażania, konfiguracji i zarządzania.
+\subsubsection{Baza danych MongoDB}
+Służy do przechowywania informacji o użytkownikach, grach, powiadomieniach, wiadomościach pomocy technicznej, transakcjach oraz zwrotów gier. Do tego użyto bazę danych MongoDB z odpowiednimi kolekcjami dla danych.
 
-\subsection{Konfiguracja i zarządzanie - 4 pkt}
+\subsubsection{API Express node.js}
+Api zostało stworzone w node.js używając framework Express. Służy do obsługi zapytań wysyłanych przez Frontend, obsługuje przetwarzanie transakcji, użytkowników, przekazuje informacje z bazy danych oraz waliduje tokeny logowania. Również zawiera operacje dostępne tylko dla pracowników sklepu, między innymi: dodawanie nowych gier, przetwarzanie zwrotów gier, odpowiadanie na wiadomości pomocy technicznej oraz zarządzanie użytkownikami. Do tego jest wykorzystywany zmodyfikowany obraz node zawierający aplikację. 
+
+\subsubsection{Frontend next.js}
+Frontend został zaimplemenowany w frameworku Next.js, operatym na React. Użytkownik za jego pomocą może wykonywać wszystkie operacje w aplikacji, takie jak logowanie, rejestracja, zakup gier i ich zwracanie, wysyłanie wiadomości do pomocy, sprawdzanie powiadomień, zmiana informacji profilu takich jak na przykład nazwa użytkownika i hasło. Zawiera również panel administratora. Komunikacja z API polega na wysyłaniu zapytań HTTP. Został w tym celu wykorzystany zmodyfikowany obraz node zawierający skompilowaną aplikację.
+
+\subsubsection{Serwer Reverse Proxy Nginx}
+Jego zadaniem jest przekierowywanie zapytań do poszczególnych komponentów, działa na obrazie nginx.
+
+\newpage
+
+\subsection{Konfiguracja i zarządzanie}
 \label{sec:NonFunctionalConditions}
 
-Powinna zawierać informacje na temat konfiguracji i zarządzania aplikacją na poziomie klastra Kubernetes.
+Konfiguracja aplikacji jest zdefiniowana w plikach manifest Kubernetes, które określają serwisy i deploymenty klastra. Zawarte są w nich poprzez zmienne środowiskowe, między innymi: secret dla szyfrowania/odszyfrowania hasła oraz adres bazy danych. Zawiera deployment 4 głównych komponentów, poprzez obrazy Docker. Do komunikacji służy serwer Nginx ustawiony jako LoadBalancer, do przekazywania zapytań zarówno do Api, jak i do frontendu.
 
-\subsection{Zarządzanie błędami - 2 pkt}
+\subsection{Zarządzanie błędami}
 \label{sec:ERD} 
 
-Powinna zawierać informacje na temat sposobów zarządzania błędami aplikacji oraz sposobów monitorowania i reagowania na awarie.
+Api jest przystosowane do wysłania odpowiednich komunikatów w razie, błędnych zapytań wraz z kodami błędów.
 
+W przypadku wystąpienia błądu w jednym z podów, Kubernetes automatycznie go usuwa, po czym tworzy nowy, identyczny. W ten sposób w środowisku produkcyjnym, zapewnione jest ciągłe działanie aplikacji.
 
-\subsection{Skalowalność - 4 pkt}
+\subsection{Skalowalność}
 \label{sec:ExamplesSection}
+Skalowanie aplikacji jest realizowane przez Horizontal Pod Autoscaler (HPA). Przy obecnej konfiguracji monitorowane jest Api, frontend oraz serwer Nginx. W razie zwiększonego obciązania któregoś z tych elementów, HPA automatycznie zwiększy ilość jego replik, a w razie spadku proporcjonalnie zmniejszy. Aktualnie HPA skonfigurowane jest na minimalnie po 3 repliki dla każdego z wymienionego elementu, a maksymalnie na 10. Średnie użycie HPA jest ustawione na 50 dla CPU i 70 dla pamięci RAM.
 
-Skalowalność jest kluczowa w architekturze aplikacji opartej na Kubernetes. Należy opisać, jak aplikacja może być skalowana, w jaki sposób skalowanie jest monitorowane i jakie narzędzia są wykorzystywane w tym celu.
+\newpage
 
-\subsection{Wymagania dotyczące zasobów - 2 pkt}
+\subsection{Wymagania dotyczące zasobów}
 \label{sec:ExampleTables}
 
-Powinna zawierać informacje na temat wymagań dotyczących zasobów dla każdego komponentu aplikacji, takie jak ilość pamięci RAM, CPU, miejsce na dysku, itp. Należy również opisać, jakie są oczekiwania dotyczące wydajności i czasu odpowiedzi dla aplikacji.
+Wymagania zasobów dla każdego komponenetu aplikacji, z przyjętym oczekiwanym czasem odpowiedzi poniżej 200 ms.
 
+\subsubsection{Baza danych}
+\begin{itemize}
+    \item Wymagania minimalne
+    \begin{itemize}
+        \item CPU: 1
+        \item RAM: 2Gi
+    \end{itemize}
+    
+    \item Wymagania maksymalne
+    \begin{itemize}
+        \item CPU: 3
+        \item RAM: 4Gi
+    \end{itemize}
+\end{itemize}
 
-\subsection{Architektura sieciowa - 4 pkt}
+\subsubsection{Api}
+\begin{itemize}
+    \item Wymagania minimalne
+    \begin{itemize}
+        \item CPU: 0.5
+        \item RAM: 256Mi
+    \end{itemize}
+    
+    \item Wymagania maksymalne
+    \begin{itemize}
+        \item CPU: 1
+        \item RAM: 512Mi
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Frontend}
+\begin{itemize}
+    \item Wymagania minimalne
+    \begin{itemize}
+        \item CPU: 0.1
+        \item RAM: 128Mi
+    \end{itemize}
+    
+    \item Wymagania maksymalne
+    \begin{itemize}
+        \item CPU: 0.5
+        \item RAM: 512Mi
+    \end{itemize}
+\end{itemize}
+
+\newpage
+
+\subsubsection{Serwer Reverse Proxy}
+\begin{itemize}
+    \item Wymagania minimalne
+    \begin{itemize}
+        \item CPU: 0.1
+        \item RAM: 64Mi
+    \end{itemize}
+    
+    \item Wymagania maksymalne
+    \begin{itemize}
+        \item CPU: 0.5
+        \item RAM: 256Mi
+    \end{itemize}
+\end{itemize}
+
+\subsection{Architektura sieciowa}
 \label{sec:ExampleResults}
 
-powinna zawierać informacje na temat architektury sieciowej aplikacji, w tym sposobu konfiguracji sieci w klastrze Kubernetes, wykorzystywanych protokołów i narzędzi do zarządzania siecią.
+\subsubsection{Baza danych}
+Serwis typu NodePort, nasłuchujący na porcie 30332:27017. Ten serwis pozwala do dostęp do bazy z zewnątrz klastra na porcie 30332 na każdym węźle.
 
-\noindent
-\textbf{Każdy odnośnik, który znajdzie się w literaturze musi mieć swoje odwołanie w projekcie. - 2 pkt} 
+\subsubsection{Api}
+Serwis typu ClusterIP, zapewnia dostęp do Api Express. Nasłuchuje na porcie 8000:8000. Nie można się dostać do niego z zewnątrz klastra.
+
+\subsubsection{Frontend}
+Serwis typu ClusterIP, zapewnia dostęp do aplikacji frontend. Nasłuchuje na porcie 3000:3000. Nie można się dostać do niego z zewnątrz klastra.
+
+\subsubsection{Serwer Reverse Proxy}
+
+Serwer Nginx to jedyny serwis typu LoadBalancer, przez co jako jedyny ma przydzielony zewnętrzny adres IP. Serwer nasłuchuje na porcie 80 i w zaleznosci od  ścieżki URL, przekazuje zapytania do frontendu bądź Api.
+
+\newpage
 
 \bibliographystyle{amsplain}
 \bibliography{references.bib}
