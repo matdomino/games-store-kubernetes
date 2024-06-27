@@ -12,3 +12,9 @@ kubectl apply -f frontend-service.yaml
 
 kubectl apply -f nginx-deployment.yaml
 kubectl apply -f nginx-service.yaml
+
+kubectl apply -f express-server-hpa.yaml
+kubectl apply -f frontend-hpa.yaml
+kubectl apply -f nginx-proxy-hpa.yaml
+
+echo "SUCCESS."
