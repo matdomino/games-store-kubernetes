@@ -23,3 +23,10 @@ spec:
           value: mongodb://mongo-db:27017/games-store-db
         - name: SECRET_TOKEN
           value: 28c2182c2bc4ddbe90bf45c805a5b5938add271e50e283acc372ffcff2dfaa4f
+        resources:
+            requests:
+              memory: "256Mi"
+              cpu: "0.5"
+            limits:
+              memory: "512Mi"
+              cpu: "1"
