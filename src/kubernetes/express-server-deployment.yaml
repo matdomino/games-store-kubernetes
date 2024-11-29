@@ -19,8 +19,11 @@ spec:
         env:
         - name: DB_URL
           value: mongodb://mongo-db:27017/games-store-db
-        - name: SECRET_TOKEN
-          value: 28c2182c2bc4ddbe90bf45c805a5b5938add271e50e283acc372ffcff2dfaa4f
+        - name: TOKEN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: gs-express-server-secret
+              key: TOKEN_KEY
         resources:
             requests:
               memory: "256Mi"

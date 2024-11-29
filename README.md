@@ -24,21 +24,28 @@ ___The complete documentation is available in both TeX and PDF formats, written 
 
 
 ## Installation
-Run using Kubernetes with commands below `(run commands in /kubernetes/ directory)`:
+Follow the steps below to run the application using Kubernetes:
 
 ### Step 1
-Set up cluster with bash script in `src` directory:
+Set Up Kubernetes Secret for API Key Management
+```
+kubectl create secret generic gs-express-server-secret \
+  --from-literal=TOKEN_KEY="YOUR_API_KEY"
+```
+
+### Step 2
+Set up cluster with bash script in `/src/kubernetes/` directory:
 ```
 ./start.sh
 ```
 
-### Step 2
+### Step 3
 Set up database collections and example employee user:
 ```
 kubectl exec <mongo-pod> -- mongosh games-store-db ./setup/dbInit.mongodb.js
 ```
 
-### Step 3
+### Step 4
 Access the app at link below:
 #### [http://localhost/](http://localhost/)
 

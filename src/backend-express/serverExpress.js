@@ -77,11 +77,11 @@ async function connect() {
     const transactionsCollection = db.collection('transactions-history');
 
     app.post('/login', async (req, res) => {
-      await login(req, res, usersCollection, bcrypt, jwt, process.env.SECRET_TOKEN);
+      await login(req, res, usersCollection, bcrypt, jwt, process.env.TOKEN_KEY);
     });
 
     app.post('/register', async (req, res) => {
-      await register(req, res, usersCollection, bcrypt, jwt, process.env.SECRET_TOKEN);
+      await register(req, res, usersCollection, bcrypt, jwt, process.env.TOKEN_KEY);
     });
 
     app.delete('/logout', async (req, res) => {
